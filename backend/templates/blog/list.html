@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Blog | Sushant Sinha{% endblock %}
+{% block nav_blog %}active{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/blog.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="blog-hero">
+  <div class="blog-hero-bg"></div>
+  <div style="position:relative;z-index:1">
+    <div class="section-tag">// TECH_WRITING</div>
+    <h1 class="page-title">TECH <span>INSIGHTS</span></h1>
+    <p class="page-desc">Thoughts on backend engineering, DevOps, cloud architecture, and leading developer teams.</p>
+  </div>
+</section>
+
+<div class="blog-controls">
+  <div class="search-box">
+    <span class="search-icon">⌕</span>
+    <input type="text" class="search-input" id="search-input" placeholder="SEARCH POSTS...">
+  </div>
+  <div class="cat-filters" id="cat-filters">
+    <button class="cat-btn active" data-cat="">ALL</button>
+  </div>
+</div>
+
+<div class="blog-main">
+  <div class="blog-list-grid" id="blog-grid">
+    <div class="loading" style="grid-column:1/-1">LOADING</div>
+  </div>
+  <div class="pagination" id="pagination"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/blog_list.js' %}"></script>
+{% endblock %}

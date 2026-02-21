@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Blog Post | Sushant Sinha{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/blog.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="post-hero" class="post-hero">
+  <div class="post-hero-bg"></div>
+  <div style="position:relative;z-index:1;max-width:900px">
+    <div style="color:var(--text-dim);font-family:'Share Tech Mono',monospace">LOADING POST...</div>
+  </div>
+</div>
+
+<div class="post-layout" id="post-layout" style="display:none">
+  <article class="post-content" id="post-content"></article>
+  <aside class="post-sidebar" id="post-sidebar"></aside>
+</div>
+
+<section class="comments-section" id="comments-section" style="display:none">
+  <div class="sidebar-title" style="font-size:1rem;margin-bottom:1.5rem">COMMENTS</div>
+  <div id="comments-list"></div>
+  <div class="comment-form">
+    <div class="sidebar-title">LEAVE A COMMENT</div>
+    <form id="comment-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">NAME *</label>
+          <input type="text" name="name" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">EMAIL *</label>
+          <input type="email" name="email" class="form-input" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">COMMENT *</label>
+        <textarea name="content" class="form-textarea" required></textarea>
+      </div>
+      <button type="submit" class="btn">POST COMMENT →</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/blog_detail.js' %}"></script>
+{% endblock %}

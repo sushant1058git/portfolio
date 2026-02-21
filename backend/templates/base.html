@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Sushant Sinha | Senior Software Engineer{% endblock %}</title>
+  <meta name="description"
+    content="{% block meta_desc %}Senior Application Engineer specializing in Django, Python, and scalable backend systems.{% endblock %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap"
+    rel="stylesheet">
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+  <div class="particles" id="particles"></div>
+  <div class="toast" id="toast"></div>
+
+  <nav>
+    <a href="/" class="nav-logo">SS.DEV</a>
+    <ul class="nav-links">
+      <li><a href="/#about" class="{% block nav_about %}{% endblock %}">about</a></li>
+      <li><a href="/#skills" class="{% block nav_skills %}{% endblock %}">skills</a></li>
+      <li><a href="/#experience" class="{% block nav_exp %}{% endblock %}">experience</a></li>
+      <li><a href="/blog/" class="{% block nav_blog %}{% endblock %}">blog</a></li>
+      <li><a href="/#contact" class="{% block nav_contact %}{% endblock %}">contact</a></li>
+    </ul>
+    <a href="/#contact" class="nav-cta">HIRE ME →</a>
+  </nav>
+
+  {% block content %}{% endblock %}
+
+  <footer>
+    <span>SUSHANT SINHA</span> · SENIOR SOFTWARE ENGINEER · BANGALORE, INDIA<br><br>
+    Built with Django + PostgreSQL · <span>© 2025</span>
+  </footer>
+
+  <script src="{% static 'js/base.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+
+</html>

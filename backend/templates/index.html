@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg-circle"></div>
+  <div class="hero-bg-circle2"></div>
+  <div class="hero-content">
+    <div class="hero-tag">SENIOR SOFTWARE ENGINEER</div>
+    <h1>
+      SUSHANT
+      <span class="hero-name-accent">SINHA</span>
+    </h1>
+    <div class="hero-subtitle" id="hero-subtitle">&gt; Backend Architect &amp; Full-Stack Developer_</div>
+    <p class="hero-desc" id="hero-desc">
+      Building scalable, high-performance systems with Python, Django, and modern cloud infrastructure.
+    </p>
+    <div id="status-badge" class="status-badge">
+      <span class="status-dot"></span> AVAILABLE FOR OPPORTUNITIES
+    </div>
+    <div class="hero-btns" style="margin-top:1rem">
+      <a href="#experience" class="btn">VIEW WORK</a>
+      <a href="#contact" class="btn btn-ghost">INIT CONTACT</a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="stat-num" id="stat-exp">5+</div>
+        <div class="stat-label">YEARS EXP</div>
+      </div>
+      <div>
+        <div class="stat-num">3</div>
+        <div class="stat-label">COMPANIES</div>
+      </div>
+      <div>
+        <div class="stat-num">4</div>
+        <div class="stat-label">DEVS MANAGED</div>
+      </div>
+      <div>
+        <div class="stat-num" id="stat-deploy">30%</div>
+        <div class="stat-label">DEPLOY FASTER</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+  <div class="about-grid">
+    <div class="terminal fade-up">
+      <div class="terminal-bar">
+        <div class="terminal-dot" style="background:#ff5f57"></div>
+        <div class="terminal-dot" style="background:#febc2e"></div>
+        <div class="terminal-dot" style="background:#28c840"></div>
+        <span
+          style="font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--text-dim);margin-left:.5rem">sushant@dev:~$</span>
+      </div>
+      <div class="terminal-body">
+        <div><span class="t-prompt">❯</span> <span class="t-cmd">whoami --details</span></div><br>
+        <div><span class="t-key">name</span>: <span class="t-val">"Sushant Sinha"</span></div>
+        <div><span class="t-key">role</span>: <span class="t-val">"Senior App Engineer"</span></div>
+        <div><span class="t-key">location</span>: <span class="t-val">"Bangalore, India 🇮🇳"</span></div>
+        <div><span class="t-key">email</span>: <span class="t-val" id="t-email">"sushant1058jan@gmail.com"</span></div>
+        <div><span class="t-key">github</span>: <span class="t-val" id="t-github">"github.com/sushant1058git"</span>
+        </div>
+        <div><span class="t-key">phone</span>: <span class="t-val" id="t-phone">"+91-880-015-4942"</span></div>
+        <br>
+        <div><span class="t-key">education</span>: <span class="t-val">"B.E. EEE, BNMIT/VTU 2017"</span></div>
+        <div><span class="t-key">cert</span>: <span class="t-val">"AWS Cloud Practitioner"</span></div>
+        <br>
+        <div><span class="t-key">status</span>: <span style="color:#28c840">● AVAILABLE</span></div>
+        <br>
+        <div><span class="t-prompt">❯</span> <span class="t-cursor"></span></div>
+      </div>
+    </div>
+    <div class="about-text fade-up">
+      <div class="section-tag">// ABOUT ME</div>
+      <h3>Building the backbone of tomorrow's apps</h3>
+      <p id="about-bio">Senior Software Engineer with 5+ years of experience architecting and delivering scalable
+        backend systems.</p>
+      <p>Passionate about clean API design, DevOps automation, and integrating AI/ML capabilities into production
+        systems.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section class="skills-section" id="skills">
+  <div class="section-header fade-up">
+    <span class="section-tag">// TECH_STACK</span>
+    <h2 class="section-title">SKILLS &amp; TOOLS</h2>
+  </div>
+  <div class="skills-grid" id="skills-grid">
+    <div class="loading">LOADING SKILLS</div>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section class="experience" id="experience">
+  <div class="section-header fade-up">
+    <span class="section-tag">// WORK_HISTORY</span>
+    <h2 class="section-title">EXPERIENCE</h2>
+  </div>
+  <div class="exp-timeline" id="exp-timeline">
+    <div class="loading">LOADING EXPERIENCE</div>
+  </div>
+</section>
+
+<!-- BLOG -->
+<section class="blog-section" id="blog">
+  <div class="section-header fade-up">
+    <span class="section-tag">// BLOG_POSTS</span>
+    <h2 class="section-title">TECH INSIGHTS</h2>
+  </div>
+  <div class="blog-grid" id="blog-grid">
+    <div class="loading">LOADING POSTS</div>
+  </div>
+  <div style="text-align:center;margin-top:3rem">
+    <a href="/blog/" class="btn">VIEW ALL POSTS →</a>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+  <div class="contact-inner">
+    <div class="section-header fade-up">
+      <span class="section-tag">// INIT_CONNECTION</span>
+      <h2 class="section-title">GET IN TOUCH</h2>
+    </div>
+    <p class="contact-desc fade-up">
+      Whether you're looking to collaborate, hire, or geek out about backend architecture — let's connect.
+    </p>
+    <div class="contact-links fade-up">
+      <a href="mailto:sushant1058jan@gmail.com" class="contact-link">✉ sushant1058jan@gmail.com</a>
+      <a href="https://github.com/sushant1058git" target="_blank" class="contact-link">⌥ github.com/sushant1058git</a>
+      <a href="tel:+918800154942" class="contact-link">✆ +91-880-015-4942</a>
+    </div>
+    <form class="contact-form fade-up" id="contact-form">
+      {% csrf_token %}
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">NAME *</label>
+          <input type="text" name="name" class="form-input" placeholder="Your name" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">EMAIL *</label>
+          <input type="email" name="email" class="form-input" placeholder="your@email.com" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">SUBJECT *</label>
+        <input type="text" name="subject" class="form-input" placeholder="What's this about?" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">MESSAGE *</label>
+        <textarea name="message" class="form-textarea" placeholder="Your message..." required></textarea>
+      </div>
+      <button type="submit" class="btn" id="submit-btn">SEND MESSAGE →</button>
+    </form>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/home.js' %}"></script>
+{% endblock %}
