@@ -31,7 +31,7 @@ GRANT ALL PRIVILEGES ON DATABASE portfolio_db TO portfolio_user;
 ### 3. Environment Variables
 
 ```bash
-cp .env.example .env
+cp .env
 ```
 
 ### 4. Run Migrations & Start
