@@ -20,6 +20,7 @@ urlpatterns = [
     # Frontend — serve index.html for all non-API routes (SPA style)
     path('', TemplateView.as_view(template_name='index.html'), name='home'),
     path('blog/', TemplateView.as_view(template_name='blog/list.html'), name='blog-list'),
+    path('blog/create/', TemplateView.as_view(template_name='blog/editor.html'), name='blog-editor'),
     path('blog/<slug:slug>/', TemplateView.as_view(template_name='blog/detail.html'), name='blog-detail'),
     path('contact/', TemplateView.as_view(template_name='contact.html'), name='contact'),
 ]

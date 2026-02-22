@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Write Post | Sushant Sinha{% endblock %}
+{% block nav_blog %}active{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/editor.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="editor-page">
+
+  <!-- Header -->
+  <div class="editor-header fade-up">
+    <div>
+      <div class="editor-breadcrumb">
+        <a href="/">HOME</a> /
+        <a href="/blog/">BLOG</a> /
+        <span id="editor-breadcrumb-post">NEW POST</span>
+      </div>
+      <div style="font-family:'Orbitron',monospace;font-size:1.4rem;color:#fff;margin-top:.5rem" id="editor-heading">
+        WRITE NEW POST
+      </div>
+    </div>
+    <div class="editor-actions">
+      <button class="btn btn-ghost" id="btn-draft" onclick="savePost('draft')">SAVE DRAFT</button>
+      <button class="btn" id="btn-publish" onclick="savePost('published')">PUBLISH →</button>
+    </div>
+  </div>
+
+  <div class="editor-container">
+
+    <!-- Title -->
+    <div style="margin-bottom:1rem">
+      <input type="text" id="post-title" class="editor-title-input" placeholder="Post title...">
+    </div>
+
+    <!-- Meta fields -->
+    <div class="editor-meta">
+      <div class="editor-field">
+        <label class="editor-label">CATEGORY</label>
+        <select id="post-category" class="editor-select">
+          <option value="">— Select Category —</option>
+        </select>
+      </div>
+      <div class="editor-field">
+        <label class="editor-label">STATUS</label>
+        <select id="post-status" class="editor-select">
+          <option value="draft">Draft</option>
+          <option value="published">Published</option>
+        </select>
+      </div>
+      <div class="editor-field">
+        <label class="editor-label">READ TIME (MIN)</label>
+        <input type="number" id="post-read-time" class="editor-input" value="5" min="1" max="60">
+      </div>
+      <div class="editor-field">
+        <label class="editor-label">EXCERPT (OPTIONAL)</label>
+        <input type="text" id="post-excerpt" class="editor-input" placeholder="Short summary shown in cards...">
+      </div>
+
+      <!-- Toggles -->
+      <div class="editor-field full">
+        <div class="editor-toggles">
+          <div class="toggle-item">
+            <label class="toggle-switch">
+              <input type="checkbox" id="post-featured">
+              <span class="toggle-slider"></span>
+            </label>
+            <span>★ FEATURED POST</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cover image -->
+      <div class="editor-field full">
+        <label class="editor-label">COVER IMAGE</label>
+        <label class="file-input-label" for="cover-image-input">
+          ⊕ CHOOSE IMAGE
+          <input type="file" id="cover-image-input" accept="image/*" style="display:none">
+        </label>
+        <div id="cover-preview" class="cover-preview"></div>
+      </div>
+    </div>
+
+    <!-- Rich Text Toolbar -->
+    <div class="rich-toolbar">
+      <!-- Text style -->
+      <select class="toolbar-select" id="heading-select" title="Heading">
+        <option value="p">Paragraph</option>
+        <option value="h1">Heading 1</option>
+        <option value="h2">Heading 2</option>
+        <option value="h3">Heading 3</option>
+      </select>
+      <div class="toolbar-sep"></div>
+
+      <!-- Format -->
+      <button class="toolbar-btn" data-cmd="bold"          title="Bold"><b>B</b></button>
+      <button class="toolbar-btn" data-cmd="italic"        title="Italic"><i>I</i></button>
+      <button class="toolbar-btn" data-cmd="underline"     title="Underline"><u>U</u></button>
+      <button class="toolbar-btn" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+      <div class="toolbar-sep"></div>
+
+      <!-- Lists -->
+      <button class="toolbar-btn" data-cmd="insertUnorderedList" title="Bullet List">≡</button>
+      <button class="toolbar-btn" data-cmd="insertOrderedList"   title="Numbered List">⒈</button>
+      <div class="toolbar-sep"></div>
+
+      <!-- Alignment -->
+      <button class="toolbar-btn" data-cmd="justifyLeft"   title="Align Left">⇤</button>
+      <button class="toolbar-btn" data-cmd="justifyCenter" title="Center">⇔</button>
+      <button class="toolbar-btn" data-cmd="justifyRight"  title="Align Right">⇥</button>
+      <div class="toolbar-sep"></div>
+
+      <!-- Special -->
+      <button class="toolbar-btn" onclick="insertLink()"      title="Insert Link">🔗</button>
+      <button class="toolbar-btn" data-cmd="insertHorizontalRule" title="Divider">—</button>
+      <button class="toolbar-btn" onclick="insertCodeBlock()" title="Code Block">&lt;/&gt;</button>
+      <button class="toolbar-btn" data-cmd="blockquote" onclick="execCmd('formatBlock','blockquote')" title="Quote">❝</button>
+      <div class="toolbar-sep"></div>
+
+      <!-- Undo/Redo -->
+      <button class="toolbar-btn" data-cmd="undo" title="Undo">↩</button>
+      <button class="toolbar-btn" data-cmd="redo" title="Redo">↪</button>
+    </div>
+
+    <!-- Content Editable Editor -->
+    <div
+      id="rich-editor"
+      class="rich-editor"
+      contenteditable="true"
+      data-placeholder="Start writing your post here... Use the toolbar above to format text, add headings, lists, code blocks, and more."
+    ></div>
+
+    <!-- Footer: word count -->
+    <div class="editor-footer">
+      <span id="word-count">0 WORDS · ~1 MIN READ</span>
+      <span style="color:var(--accent);letter-spacing:.1em">AUTO-SAVES ON PUBLISH</span>
+    </div>
+
+    <!-- My Posts Table -->
+    <div style="margin-top:5rem">
+      <div style="font-family:'Orbitron',monospace;font-size:1rem;color:#fff;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem">
+        MY POSTS
+        <span style="font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--text-dim)">// ALL DRAFTS & PUBLISHED</span>
+      </div>
+      <table class="my-posts-table">
+        <thead>
+          <tr>
+            <th>TITLE</th>
+            <th>CATEGORY</th>
+            <th>STATUS</th>
+            <th>DATE</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody id="my-posts-body">
+          <tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:2rem;font-family:'Share Tech Mono',monospace">LOADING...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/editor.js' %}"></script>
+{% endblock %}

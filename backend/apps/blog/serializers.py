@@ -39,6 +39,7 @@ class PostListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'slug', 'category', 'excerpt',
             'cover_image', 'read_time', 'views', 'is_featured',
+            'status',  # ← added
             'published_date', 'published_at'
         ]
 
@@ -60,6 +61,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'slug', 'category', 'excerpt', 'content',
             'content_html', 'cover_image', 'read_time', 'views', 'is_featured',
+            'status',  # ← added
             'published_date', 'published_at', 'comments', 'comment_count'
         ]
 

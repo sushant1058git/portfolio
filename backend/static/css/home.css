@@ -89,3 +89,58 @@ h1 { font-family:'Orbitron',monospace; font-size:clamp(3rem,7vw,6rem); font-weig
   .about, .skills-section, .experience, .blog-section, .contact { padding:5rem 1.5rem; }
   .about-grid { grid-template-columns:1fr; gap:2.5rem; }
 }
+
+/* ── Avatar & Resume ── */
+.hero-top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 3rem;
+  margin-bottom: 0;
+}
+.hero-text-block { flex: 1; }
+.hero-avatar-wrap {
+  flex-shrink: 0;
+  position: relative;
+}
+.hero-avatar {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+  box-shadow: var(--glow), 0 0 60px rgba(0,245,212,0.1);
+  display: block;
+  filter: grayscale(20%);
+  transition: filter 0.3s;
+}
+.hero-avatar:hover { filter: grayscale(0%); }
+.hero-avatar-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border: 1px solid rgba(0,245,212,0.2);
+  pointer-events: none;
+}
+.hero-avatar-wrap::after {
+  content: '';
+  position: absolute;
+  top: -6px; right: -6px;
+  width: 12px; height: 12px;
+  background: var(--accent);
+  box-shadow: var(--glow);
+}
+
+.terminal-avatar {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border: 1px solid var(--accent);
+  display: block;
+  margin-bottom: .5rem;
+  filter: grayscale(30%);
+}
+
+@media (max-width: 768px) {
+  .hero-top-row { flex-direction: column-reverse; gap: 1.5rem; }
+  .hero-avatar { width: 120px; height: 120px; }
+}

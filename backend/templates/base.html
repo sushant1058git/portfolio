@@ -23,16 +23,54 @@
   <div class="particles" id="particles"></div>
   <div class="toast" id="toast"></div>
 
+  <!-- ── LOGIN MODAL ── -->
+  <div class="modal-overlay" id="login-modal" onclick="closeLoginModal(event)">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span class="modal-tag">// AUTHENTICATE</span>
+          <div style="font-family:'Orbitron',monospace;font-size:1.2rem;color:#fff;margin-top:.3rem">ADMIN LOGIN</div>
+        </div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div id="login-error" class="modal-error" style="display:none"></div>
+      <form id="login-form" onsubmit="submitLogin(event)">
+        <div class="modal-field">
+          <label class="modal-label">USERNAME</label>
+          <input type="text" id="login-username" class="modal-input" placeholder="admin" autocomplete="username"
+            required>
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">PASSWORD</label>
+          <input type="password" id="login-password" class="modal-input" placeholder="••••••••"
+            autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn modal-submit" id="login-btn">LOGIN →</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── NAV ── -->
   <nav>
     <a href="/" class="nav-logo">SS.DEV</a>
     <ul class="nav-links">
-      <li><a href="/#about" class="{% block nav_about %}{% endblock %}">about</a></li>
-      <li><a href="/#skills" class="{% block nav_skills %}{% endblock %}">skills</a></li>
-      <li><a href="/#experience" class="{% block nav_exp %}{% endblock %}">experience</a></li>
-      <li><a href="/blog/" class="{% block nav_blog %}{% endblock %}">blog</a></li>
+      <li><a href="/#about" class="{% block nav_about   %}{% endblock %}">about</a></li>
+      <li><a href="/#skills" class="{% block nav_skills  %}{% endblock %}">skills</a></li>
+      <li><a href="/#experience" class="{% block nav_exp     %}{% endblock %}">experience</a></li>
+      <li><a href="/blog/" class="{% block nav_blog    %}{% endblock %}">blog</a></li>
       <li><a href="/#contact" class="{% block nav_contact %}{% endblock %}">contact</a></li>
     </ul>
-    <a href="/#contact" class="nav-cta">HIRE ME →</a>
+    <div class="nav-actions">
+      <!-- Logged-out state -->
+      <button class="nav-login-btn" id="nav-login-btn" onclick="openLoginModal()">⚿ LOGIN</button>
+      <!-- Logged-in state -->
+      <div class="nav-user" id="nav-user" style="display:none">
+        <span class="nav-username" id="nav-username"></span>
+        <a href="/blog/create/" class="btn nav-write-btn">✎ WRITE POST</a>
+        <button class="nav-logout-btn" onclick="doLogout()">LOGOUT</button>
+      </div>
+      <a href="/#contact" class="nav-cta">HIRE ME →</a>
+    </div>
   </nav>
 
   {% block content %}{% endblock %}
@@ -44,6 +82,7 @@
 
   <script src="{% static 'js/base.js' %}"></script>
   {% block extra_js %}{% endblock %}
+
 </body>
 
 </html>
