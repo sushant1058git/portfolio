@@ -7,6 +7,9 @@ from .serializers import (
     EducationSerializer, CertificationSerializer
 )
 
+from .models import Project, CurrentlyWorking
+from .serializers import ProjectSerializer, CurrentlyWorkingSerializer
+
 
 class ProfileView(APIView):
     def get(self, request):
@@ -64,3 +67,14 @@ class PortfolioSummaryView(APIView):
             'education': EducationSerializer(education, many=True).data,
             'certifications': CertificationSerializer(certs, many=True).data,
         })
+
+
+class ProjectListView(APIView):
+    def get(self, request):
+        projects = Project.objects.all()
+        return Response(ProjectSerializer(projects, many=True, context={'request': request}).data)
+
+class CurrentlyWorkingView(APIView):
+    def get(self, request):
+        items = CurrentlyWorking.objects.filter(is_active=True).order_by('-updated_at')
+        return Response(CurrentlyWorkingSerializer(items, many=True).data)

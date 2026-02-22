@@ -43,3 +43,15 @@ class EducationAdmin(admin.ModelAdmin):
 @admin.register(Certification)
 class CertificationAdmin(admin.ModelAdmin):
     list_display = ['name', 'issuer', 'year']
+
+
+from .models import Project, CurrentlyWorking
+
+@admin.register(Project)
+class ProjectAdmin(admin.ModelAdmin):
+    list_display  = ['title', 'is_featured', 'order']
+    prepopulated_fields = {'slug': ('title',)}
+
+@admin.register(CurrentlyWorking)
+class CurrentlyWorkingAdmin(admin.ModelAdmin):
+    list_display = ['title', 'type', 'progress', 'is_active', 'updated_at']

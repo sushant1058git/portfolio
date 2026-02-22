@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     ProfileView, SkillsView, ExperienceView,
-    EducationView, CertificationView, PortfolioSummaryView
+    EducationView, CertificationView, PortfolioSummaryView, ProjectListView, CurrentlyWorkingView
 )
 from .auth_views import LoginView, LogoutView, AuthCheckView
 
@@ -16,4 +16,6 @@ urlpatterns = [
     path('auth/login/', LoginView.as_view(), name='api-login'),
     path('auth/logout/', LogoutView.as_view(), name='api-logout'),
     path('auth/check/', AuthCheckView.as_view(), name='api-auth-check'),
+    path('projects/', ProjectListView.as_view(), name='api-projects'),
+    path('currently-working/', CurrentlyWorkingView.as_view(), name='api-currently-working'),
 ]

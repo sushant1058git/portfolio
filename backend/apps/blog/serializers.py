@@ -55,6 +55,9 @@ class PostDetailSerializer(serializers.ModelSerializer):
     content_html = serializers.ReadOnlyField()
     published_date = serializers.SerializerMethodField()
     comment_count = serializers.SerializerMethodField()
+    cover_image = serializers.SerializerMethodField()
+
+
 
     class Meta:
         model = Post
@@ -69,6 +72,12 @@ class PostDetailSerializer(serializers.ModelSerializer):
         if obj.published_at:
             return obj.published_at.strftime('%b %d, %Y')
         return ''
+
+    def get_cover_image(self, obj):
+        request = self.context.get('request')
+        if obj.cover_image and request:
+            return request.build_absolute_uri(obj.cover_image.url)
+        return None
 
     def get_comment_count(self, obj):
         return obj.comments.filter(is_approved=True).count()

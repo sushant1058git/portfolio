@@ -3,6 +3,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/projects.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -12,21 +13,28 @@
   <div class="hero-bg-circle"></div>
   <div class="hero-bg-circle2"></div>
   <div class="hero-content">
-    <div class="hero-tag">SENIOR SOFTWARE ENGINEER</div>
-    <h1>
-      SUSHANT
-      <span class="hero-name-accent">SINHA</span>
-    </h1>
-    <div class="hero-subtitle" id="hero-subtitle">&gt; Backend Architect &amp; Full-Stack Developer_</div>
-    <p class="hero-desc" id="hero-desc">
-      Building scalable, high-performance systems with Python, Django, and modern cloud infrastructure.
-    </p>
-    <div id="status-badge" class="status-badge">
-      <span class="status-dot"></span> AVAILABLE FOR OPPORTUNITIES
-    </div>
-    <div class="hero-btns" style="margin-top:1rem">
-      <a href="#experience" class="btn">VIEW WORK</a>
-      <a href="#contact" class="btn btn-ghost">INIT CONTACT</a>
+    <div class="hero-top-row">
+      <div class="hero-text-block">
+        <div class="hero-tag">SENIOR SOFTWARE ENGINEER</div>
+        <h1>
+          SUSHANT
+          <span class="hero-name-accent">SINHA</span>
+        </h1>
+        <div class="hero-subtitle" id="hero-subtitle">&gt; Backend Architect &amp; Full-Stack Developer_</div>
+        <p class="hero-desc" id="hero-desc">
+          Building scalable, high-performance systems with Python, Django, and modern cloud infrastructure.
+        </p>
+        <div id="status-badge" class="status-badge">
+          <span class="status-dot"></span> AVAILABLE FOR OPPORTUNITIES
+        </div>
+        <div class="hero-btns">
+          <a href="#experience" class="btn">VIEW WORK</a>
+          <a href="#contact" class="btn btn-ghost">INIT CONTACT</a>
+          <a href="#" id="resume-btn" class="btn" style="border-color:var(--accent3);color:var(--accent3)" download>⬇
+            DOWNLOAD RESUME</a>
+        </div>
+      </div>
+      <div class="hero-avatar-wrap" id="hero-avatar-wrap" style="display:none"></div>
     </div>
     <div class="hero-stats">
       <div>
@@ -58,9 +66,10 @@
         <div class="terminal-dot" style="background:#febc2e"></div>
         <div class="terminal-dot" style="background:#28c840"></div>
         <span
-          style="font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--text-dim);margin-left:.5rem">sushant@dev:~$</span>
+          style="font-family:'Share Tech Mono';font-size:.75rem;color:var(--text-dim);margin-left:.5rem">sushant@dev:~$</span>
       </div>
       <div class="terminal-body">
+        <div id="t-avatar" style="margin-bottom:.5rem"></div>
         <div><span class="t-prompt">❯</span> <span class="t-cmd">whoami --details</span></div><br>
         <div><span class="t-key">name</span>: <span class="t-val">"Sushant Sinha"</span></div>
         <div><span class="t-key">role</span>: <span class="t-val">"Senior App Engineer"</span></div>
@@ -100,14 +109,58 @@
   </div>
 </section>
 
-<!-- EXPERIENCE -->
+<!-- CURRENTLY WORKING ON -->
+<div id="currently-wrap" style="display:none">
+  <div class="currently-section">
+    <div class="currently-inner">
+      <div class="currently-label">
+        <span class="currently-pulse"></span> CURRENTLY
+      </div>
+      <div class="currently-card" id="currently-card">
+        <span class="currently-type" id="currently-type">BUILDING</span>
+        <div id="currently-content" style="flex:1;transition:opacity .25s,transform .25s">
+          <div class="currently-title" id="currently-title"></div>
+          <div class="currently-desc" id="currently-desc"
+            style="font-size:.82rem;color:var(--text-dim);margin-top:.25rem;display:none"></div>
+          <div class="currently-tags" id="currently-tags"></div>
+        </div>
+        <div id="progress-wrap" style="min-width:130px;display:none">
+          <div class="progress-label">PROGRESS &middot; <span id="progress-pct">0%</span></div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:.8rem;flex-shrink:0">
+        <div id="cw-dots" style="display:none;gap:.4rem;align-items:center"></div>
+        <span id="cw-counter"
+          style="display:none;font-family:Share Tech Mono,monospace;font-size:.7rem;color:var(--text-dim)"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROJECTS -->
+<section class="projects-section" id="projects">
+  <div class="section-header fade-up">
+    <span class="section-tag">// PROJECTS</span>
+    <h2 class="section-title">WHAT I'VE BUILT</h2>
+  </div>
+  <div class="projects-grid" id="projects-grid">
+    <div class="loading">LOADING PROJECTS</div>
+  </div>
+</section>
+
+<!-- EXPERIENCE - Interactive Timeline -->
 <section class="experience" id="experience">
   <div class="section-header fade-up">
     <span class="section-tag">// WORK_HISTORY</span>
     <h2 class="section-title">EXPERIENCE</h2>
   </div>
-  <div class="exp-timeline" id="exp-timeline">
-    <div class="loading">LOADING EXPERIENCE</div>
+  <div class="timeline-wrapper">
+    <div class="timeline-track" id="timeline-track">
+      <div class="loading">LOADING</div>
+    </div>
   </div>
 </section>
 
@@ -169,4 +222,5 @@
 
 {% block extra_js %}
 <script src="{% static 'js/home.js' %}"></script>
+<script src="{% static 'js/projects.js' %}"></script>
 {% endblock %}

@@ -116,3 +116,49 @@ class Certification(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Project(models.Model):
+    title        = models.CharField(max_length=200)
+    slug         = models.SlugField(unique=True)
+    description  = models.TextField()
+    problem      = models.TextField(blank=True, help_text="What problem does it solve?")
+    outcome      = models.TextField(blank=True, help_text="Measurable result e.g. 40% faster")
+    demo_url     = models.URLField(blank=True)
+    github_url   = models.URLField(blank=True)
+    cover_image  = models.ImageField(upload_to='projects/', blank=True, null=True)
+    tech_stack   = models.JSONField(default=list, help_text='["Django","PostgreSQL","Redis"]')
+    github_stars = models.IntegerField(default=0)
+    is_featured  = models.BooleanField(default=False)
+    order        = models.IntegerField(default=0)
+    created_at   = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', '-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class CurrentlyWorking(models.Model):
+    """Singleton — only one active record shown."""
+    title       = models.CharField(max_length=200, help_text="What are you building/learning?")
+    description = models.TextField(blank=True)
+    type        = models.CharField(max_length=50, choices=[
+        ('building', 'Building'),
+        ('learning', 'Learning'),
+        ('contributing', 'Contributing'),
+        ('reading', 'Reading'),
+    ], default='building')
+    tech_tags   = models.JSONField(default=list, help_text='["FastAPI","LangChain"]')
+    link        = models.URLField(blank=True)
+    progress    = models.IntegerField(default=0, help_text="0-100 percent")
+    is_active   = models.BooleanField(default=True)
+    updated_at  = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Currently Working On"
+        verbose_name_plural = "Currently Working On"
+
+    def __str__(self):
+        return self.title
