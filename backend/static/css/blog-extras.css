@@ -1,0 +1,72 @@
+/* ============================================
+   BLOG-EXTRAS.CSS
+   Reading progress bar + Share buttons
+   ============================================ */
+
+/* ── Reading Progress Bar ── */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  z-index: 9999;
+  box-shadow: 0 0 10px var(--accent);
+  transition: width 0.1s linear;
+}
+
+/* ── Share Bar ── */
+.share-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1.2rem 1.6rem;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  margin: 2rem 0;
+  flex-wrap: wrap;
+}
+.share-label {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.25em;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.share-links {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.share-btn {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.25s;
+}
+.share-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.share-btn.linkedin:hover {
+  border-color: #0a66c2;
+  color: #0a66c2;
+}
+.share-btn.twitter:hover {
+  border-color: #1d9bf0;
+  color: #1d9bf0;
+}
+.share-btn.copied {
+  border-color: #28c840 !important;
+  color: #28c840 !important;
+}

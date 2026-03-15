@@ -26,15 +26,12 @@ async function loadPost() {
 // ---- Render post hero + content ----
 function renderPost(p) {
   const catColor = p.category?.color || "var(--accent2)";
-  const heroBg = p.cover_image
-    ? `style="background-image:url('${p.cover_image}');background-size:cover;background-position:center;"`
-    : "";
 
   // Hero
   const hero = document.getElementById("post-hero");
   if (hero) {
     hero.innerHTML = `
-      <div class="post-hero-bg" ${heroBg}></div>
+      <div class="post-hero-bg"></div>
       <div style="position:relative;z-index:1;max-width:900px">
         <div class="post-breadcrumb">
           <a href="/">HOME</a> /
@@ -104,6 +101,12 @@ function renderPost(p) {
 
   // Comment form
   initCommentForm();
+
+  // Share bar — show it and store post data for share functions
+  window._sharePostTitle = p.title || "";
+  window._sharePostSlug = p.slug || "";
+  const shareWrap = document.getElementById("share-bar-wrap");
+  if (shareWrap) shareWrap.style.display = "block";
 }
 
 // ---- Render comments list ----
@@ -208,6 +211,54 @@ function initCommentForm() {
       btn.disabled = false;
     }
   });
+}
+
+// ---- Share functions (used by detail.html buttons) ----
+function shareLinkedIn() {
+  const url = encodeURIComponent(window.location.href);
+  window.open(
+    "https://www.linkedin.com/sharing/share-offsite/?url=" + url,
+    "_blank",
+    "width=600,height=500",
+  );
+}
+
+function shareTwitter() {
+  const url = encodeURIComponent(window.location.href);
+  const text = encodeURIComponent(
+    (window._sharePostTitle || document.title) + " — by Sushant Sinha",
+  );
+  window.open(
+    "https://twitter.com/intent/tweet?text=" + text + "&url=" + url,
+    "_blank",
+    "width=600,height=400",
+  );
+}
+
+function copyLink() {
+  navigator.clipboard
+    .writeText(window.location.href)
+    .then(() => {
+      const btn = document.getElementById("copy-btn");
+      if (!btn) return;
+      const orig = btn.innerHTML;
+      btn.innerHTML = "✓ COPIED!";
+      btn.classList.add("copied");
+      setTimeout(() => {
+        btn.innerHTML = orig;
+        btn.classList.remove("copied");
+      }, 2000);
+    })
+    .catch(() => {
+      // Fallback for browsers without clipboard API
+      const ta = document.createElement("textarea");
+      ta.value = window.location.href;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      showToast("✓ Link copied!");
+    });
 }
 
 // ---- Init ----

@@ -5,19 +5,42 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/blog.css' %}">
+<link rel="stylesheet" href="{% static 'css/blog-extras.css' %}">
 {% endblock %}
 
 {% block content %}
+
+<!-- Reading progress bar -->
+<div class="reading-progress" id="reading-progress"></div>
+
 <div id="post-hero" class="post-hero">
   <div class="post-hero-bg"></div>
   <div style="position:relative;z-index:1;max-width:900px">
-    <div style="color:var(--text-dim);font-family:'Share Tech Mono',monospace">LOADING POST...</div>
+    <div style="color:var(--text-dim);font-family:'Share Tech Mono',monospace;letter-spacing:.2em">LOADING POST...</div>
   </div>
 </div>
 
 <div class="post-layout" id="post-layout" style="display:none">
   <article class="post-content" id="post-content"></article>
   <aside class="post-sidebar" id="post-sidebar"></aside>
+</div>
+
+<!-- Share bar -->
+<div id="share-bar-wrap" style="display:none;max-width:1100px;padding:0 4rem">
+  <div class="share-bar">
+    <span class="share-label">SHARE</span>
+    <div class="share-links">
+      <button class="share-btn" onclick="shareLinkedIn()" title="Share on LinkedIn">
+        in LINKEDIN
+      </button>
+      <button class="share-btn twitter" onclick="shareTwitter()" title="Share on Twitter/X">
+        𝕏 TWITTER
+      </button>
+      <button class="share-btn" id="copy-btn" onclick="copyLink()" title="Copy link">
+        ⎘ COPY LINK
+      </button>
+    </div>
+  </div>
 </div>
 
 <section class="comments-section" id="comments-section" style="display:none">
@@ -44,8 +67,24 @@
     </form>
   </div>
 </section>
+
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/blog_detail.js' %}"></script>
+<script src="{% static 'js/blog-detail.js' %}"></script>
+<script>
+  /* Reading progress bar */
+  (function () {
+    const bar = document.getElementById('reading-progress');
+    if (!bar) return;
+    function update() {
+      const content = document.getElementById('post-content');
+      if (!content) return;
+      const scrolled = Math.max(0, window.scrollY - content.offsetTop);
+      const total = content.offsetHeight - window.innerHeight + 200;
+      bar.style.width = Math.min(100, (scrolled / Math.max(1, total)) * 100) + '%';
+    }
+    window.addEventListener('scroll', update, { passive: true });
+  })();
+</script>
 {% endblock %}

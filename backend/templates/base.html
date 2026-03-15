@@ -59,8 +59,34 @@
       <li><a href="/#experience" class="{% block nav_exp     %}{% endblock %}">experience</a></li>
       <li><a href="/blog/" class="{% block nav_blog    %}{% endblock %}">blog</a></li>
       <li><a href="/#contact" class="{% block nav_contact %}{% endblock %}">contact</a></li>
-      <li><a href="/#projects" class="{% block nav_projects %}{% endblock %}">projects</a></li>
-
+      <li class="nav-dropdown" id="nav-labs-dropdown">
+        <button class="nav-dropdown-btn" onclick="toggleDropdown()" aria-expanded="false">
+          labs <span class="nav-dropdown-arrow">▾</span>
+        </button>
+        <div class="nav-dropdown-menu" id="nav-dropdown-menu">
+          <a href="/playground/" class="nav-dropdown-item {% block nav_playground %}{% endblock %}">
+            <span class="nav-dd-icon">⬡</span>
+            <span>
+              <span class="nav-dd-label">PLAYGROUND</span>
+              <span class="nav-dd-desc">Live Python interpreter</span>
+            </span>
+          </a>
+          <a href="/status/" class="nav-dropdown-item {% block nav_status %}{% endblock %}">
+            <span class="nav-dd-icon">◉</span>
+            <span>
+              <span class="nav-dd-label">STATUS</span>
+              <span class="nav-dd-desc">System health dashboard</span>
+            </span>
+          </a>
+          <a href="/api/docs/" class="nav-dropdown-item" target="_blank">
+            <span class="nav-dd-icon">⎗</span>
+            <span>
+              <span class="nav-dd-label">API DOCS</span>
+              <span class="nav-dd-desc">Swagger / OpenAPI</span>
+            </span>
+          </a>
+        </div>
+      </li>
     </ul>
     <div class="nav-actions">
       <!-- Logged-out state -->

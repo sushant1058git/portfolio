@@ -1,0 +1,476 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}System Status | Sushant Sinha{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── Status page styles ── */
+    .status-page {
+        min-height: 100vh;
+        padding: 8rem 4rem 4rem;
+        position: relative;
+        z-index: 2;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .status-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 3rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .status-hero-left .page-tag {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .75rem;
+        letter-spacing: .35em;
+        color: var(--accent);
+        display: block;
+        margin-bottom: .5rem;
+    }
+
+    .status-hero-left h1 {
+        font-family: 'Orbitron', monospace;
+        font-size: 2rem;
+        font-weight: 900;
+        color: var(--text-heading);
+        margin: 0;
+    }
+
+    .overall-badge {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .85rem;
+        letter-spacing: .2em;
+        padding: .6rem 1.4rem;
+        border: 1px solid;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+
+    .overall-badge.ok {
+        border-color: #28c840;
+        color: #28c840;
+    }
+
+    .overall-badge.warn {
+        border-color: #f5c518;
+        color: #f5c518;
+    }
+
+    .overall-badge.error {
+        border-color: var(--accent3);
+        color: var(--accent3);
+    }
+
+    .overall-badge.loading {
+        border-color: var(--text-dim);
+        color: var(--text-dim);
+    }
+
+    .badge-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+        animation: blink 1.5s infinite;
+    }
+
+    /* ── Check grid ── */
+    .checks-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .check-card {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        padding: 1.4rem 1.6rem;
+        position: relative;
+        overflow: hidden;
+        transition: border-color .3s;
+    }
+
+    .check-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3px;
+        height: 100%;
+    }
+
+    .check-card.ok::before {
+        background: #28c840;
+    }
+
+    .check-card.warn::before {
+        background: #f5c518;
+    }
+
+    .check-card.error::before {
+        background: var(--accent3);
+    }
+
+    .check-card.loading::before {
+        background: var(--text-dim);
+    }
+
+    .check-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .check-name {
+        font-family: 'Orbitron', monospace;
+        font-size: .8rem;
+        color: var(--text-heading);
+        letter-spacing: .08em;
+    }
+
+    .check-status {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .7rem;
+        letter-spacing: .15em;
+        padding: .15rem .5rem;
+        border: 1px solid;
+    }
+
+    .check-status.ok {
+        border-color: #28c840;
+        color: #28c840;
+    }
+
+    .check-status.warn {
+        border-color: #f5c518;
+        color: #f5c518;
+    }
+
+    .check-status.error {
+        border-color: var(--accent3);
+        color: var(--accent3);
+    }
+
+    .check-status.loading {
+        border-color: var(--text-dim);
+        color: var(--text-dim);
+    }
+
+    .check-metrics {
+        display: flex;
+        flex-direction: column;
+        gap: .35rem;
+    }
+
+    .metric-row {
+        display: flex;
+        justify-content: space-between;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .75rem;
+    }
+
+    .metric-key {
+        color: var(--text-dim);
+    }
+
+    .metric-val {
+        color: var(--text);
+    }
+
+    .metric-val.good {
+        color: #28c840;
+    }
+
+    .metric-val.warn {
+        color: #f5c518;
+    }
+
+    .metric-val.bad {
+        color: var(--accent3);
+    }
+
+    /* ── Progress bar in card ── */
+    .mini-bar {
+        height: 3px;
+        background: var(--bg3);
+        border: 1px solid var(--border);
+        margin-top: .5rem;
+        overflow: hidden;
+    }
+
+    .mini-bar-fill {
+        height: 100%;
+        transition: width 1s ease;
+    }
+
+    .mini-bar-fill.ok {
+        background: #28c840;
+    }
+
+    .mini-bar-fill.warn {
+        background: #f5c518;
+    }
+
+    .mini-bar-fill.bad {
+        background: var(--accent3);
+    }
+
+    /* ── System info strip ── */
+    .sys-info {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        padding: 1.2rem 1.6rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .78rem;
+    }
+
+    .sys-info-item {
+        display: flex;
+        flex-direction: column;
+        gap: .2rem;
+    }
+
+    .sys-info-label {
+        color: var(--text-dim);
+        font-size: .68rem;
+        letter-spacing: .15em;
+    }
+
+    .sys-info-val {
+        color: var(--accent);
+    }
+
+    /* ── Refresh note ── */
+    .refresh-note {
+        text-align: center;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .72rem;
+        color: var(--text-dim);
+        margin-top: 2rem;
+        letter-spacing: .1em;
+    }
+
+    .refresh-btn {
+        background: none;
+        border: none;
+        color: var(--accent);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .72rem;
+        cursor: pointer;
+        letter-spacing: .1em;
+        text-decoration: underline;
+    }
+
+    .last-checked {
+        color: var(--accent2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="status-page">
+
+    <div class="status-hero">
+        <div class="status-hero-left">
+            <span class="page-tag">// SYSTEM_HEALTH</span>
+            <h1>STATUS</h1>
+        </div>
+        <div class="overall-badge loading" id="overall-badge">
+            <span class="badge-dot"></span>
+            <span id="overall-text">CHECKING...</span>
+        </div>
+    </div>
+
+    <!-- System info strip -->
+    <div class="sys-info" id="sys-info">
+        <div class="sys-info-item">
+            <span class="sys-info-label">UPTIME</span>
+            <span class="sys-info-val" id="si-uptime">—</span>
+        </div>
+        <div class="sys-info-item">
+            <span class="sys-info-label">PYTHON</span>
+            <span class="sys-info-val" id="si-python">—</span>
+        </div>
+        <div class="sys-info-item">
+            <span class="sys-info-label">DJANGO</span>
+            <span class="sys-info-val" id="si-django">—</span>
+        </div>
+        <div class="sys-info-item">
+            <span class="sys-info-label">PLATFORM</span>
+            <span class="sys-info-val" id="si-platform">—</span>
+        </div>
+        <div class="sys-info-item">
+            <span class="sys-info-label">LAST CHECKED</span>
+            <span class="sys-info-val last-checked" id="si-time">—</span>
+        </div>
+    </div>
+
+    <!-- Check cards grid -->
+    <div class="checks-grid" id="checks-grid">
+        <div class="loading">FETCHING STATUS</div>
+    </div>
+
+    <div class="refresh-note">
+        Auto-refreshes every 30s ·
+        <button class="refresh-btn" onclick="fetchStatus()">REFRESH NOW</button>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    async function fetchStatus() {
+        try {
+            const res = await fetch('/api/status/');
+            const data = await res.json();
+            renderStatus(data);
+        } catch (e) {
+            document.getElementById('overall-text').textContent = 'UNREACHABLE';
+            const badge = document.getElementById('overall-badge');
+            badge.className = 'overall-badge error';
+        }
+    }
+
+    function renderStatus(d) {
+        // Overall badge
+        const badge = document.getElementById('overall-badge');
+        const overallMap = { ok: 'ALL SYSTEMS OPERATIONAL', warn: 'DEGRADED PERFORMANCE', error: 'OUTAGE DETECTED' };
+        badge.className = 'overall-badge ' + d.overall;
+        document.getElementById('overall-text').textContent = overallMap[d.overall] || d.overall.toUpperCase();
+
+        // Sys info
+        document.getElementById('si-uptime').textContent = d.uptime?.human || '—';
+        document.getElementById('si-python').textContent = d.python || '—';
+        document.getElementById('si-django').textContent = 'v' + (d.django || '—');
+        document.getElementById('si-platform').textContent = d.platform || '—';
+        document.getElementById('si-time').textContent = new Date().toLocaleTimeString();
+
+        // Cards
+        const grid = document.getElementById('checks-grid');
+        const c = d.checks || {};
+
+        const cards = [
+            buildDbCard(c.database),
+            buildCacheCard(c.cache),
+            buildDiskCard(c.disk),
+            buildMemCard(c.memory),
+            buildAppCard(c.app),
+        ];
+
+        grid.innerHTML = cards.join('');
+    }
+
+    function statusBadge(s) {
+        return `<span class="check-status ${s}">${s.toUpperCase()}</span>`;
+    }
+    function metricRow(key, val, cls = '') {
+        return `<div class="metric-row"><span class="metric-key">${key}</span><span class="metric-val ${cls}">${val}</span></div>`;
+    }
+    function miniBar(pct, cls) {
+        return `<div class="mini-bar"><div class="mini-bar-fill ${cls}" style="width:0%" data-pct="${pct}"></div></div>`;
+    }
+
+    function buildDbCard(db) {
+        if (!db) return '';
+        const s = db.status || 'error';
+        const latCls = db.latency_ms < 10 ? 'good' : db.latency_ms < 50 ? '' : 'warn';
+        return `<div class="check-card ${s}">
+    <div class="check-header"><span class="check-name">DATABASE</span>${statusBadge(s)}</div>
+    <div class="check-metrics">
+      ${metricRow('ENGINE', db.engine || '—')}
+      ${db.latency_ms !== undefined ? metricRow('LATENCY', db.latency_ms + ' ms', latCls) : ''}
+      ${db.error ? metricRow('ERROR', db.error, 'bad') : ''}
+    </div>
+  </div>`;
+    }
+
+    function buildCacheCard(ch) {
+        if (!ch) return '';
+        const s = ch.status || 'error';
+        const latCls = ch.latency_ms < 5 ? 'good' : ch.latency_ms < 20 ? '' : 'warn';
+        return `<div class="check-card ${s}">
+    <div class="check-header"><span class="check-name">CACHE</span>${statusBadge(s)}</div>
+    <div class="check-metrics">
+      ${ch.latency_ms !== undefined ? metricRow('READ/WRITE', ch.latency_ms + ' ms', latCls) : ''}
+      ${ch.error ? metricRow('ERROR', ch.error, 'bad') : ''}
+      ${s === 'ok' ? metricRow('BACKEND', 'LocMemCache') : ''}
+    </div>
+  </div>`;
+    }
+
+    function buildDiskCard(disk) {
+        if (!disk) return '';
+        const s = disk.status || 'error';
+        const pct = disk.used_pct || 0;
+        const barCls = pct < 70 ? 'ok' : pct < 90 ? 'warn' : 'bad';
+        return `<div class="check-card ${s}">
+    <div class="check-header"><span class="check-name">DISK</span>${statusBadge(s)}</div>
+    <div class="check-metrics">
+      ${metricRow('TOTAL', (disk.total_gb || 0) + ' GB')}
+      ${metricRow('USED', (disk.used_gb || 0) + ' GB — ' + pct + '%', barCls)}
+      ${metricRow('FREE', (disk.free_gb || 0) + ' GB', 'good')}
+    </div>
+    ${miniBar(pct, barCls)}
+  </div>`;
+    }
+
+    function buildMemCard(mem) {
+        if (!mem) return '';
+        const s = mem.status || 'error';
+        const pct = mem.used_pct || 0;
+        const barCls = pct < 70 ? 'ok' : pct < 90 ? 'warn' : 'bad';
+        return `<div class="check-card ${s}">
+    <div class="check-header"><span class="check-name">MEMORY</span>${statusBadge(s)}</div>
+    <div class="check-metrics">
+      ${metricRow('TOTAL', (mem.total_mb || 0) + ' MB')}
+      ${metricRow('USED', (mem.used_mb || 0) + ' MB — ' + pct + '%', barCls)}
+      ${metricRow('AVAILABLE', (mem.available_mb || 0) + ' MB', 'good')}
+    </div>
+    ${miniBar(pct, barCls)}
+  </div>`;
+    }
+
+    function buildAppCard(app) {
+        if (!app) return '';
+        const s = app.status || 'error';
+        return `<div class="check-card ${s}">
+    <div class="check-header"><span class="check-name">APPLICATION</span>${statusBadge(s)}</div>
+    <div class="check-metrics">
+      ${metricRow('TOTAL POSTS', app.posts ?? '—')}
+      ${metricRow('PUBLISHED POSTS', app.published ?? '—', 'good')}
+      ${metricRow('PROJECTS', app.projects ?? '—')}
+      ${metricRow('MESSAGES', app.messages ?? '—')}
+      ${app.error ? metricRow('ERROR', app.error, 'bad') : ''}
+    </div>
+  </div>`;
+    }
+
+    // Animate progress bars after render
+    function animateBars() {
+        document.querySelectorAll('.mini-bar-fill').forEach(el => {
+            setTimeout(() => { el.style.width = el.dataset.pct + '%'; }, 100);
+        });
+    }
+
+    // Override renderStatus to animate bars
+    const _render = renderStatus;
+    renderStatus = function (d) { _render(d); setTimeout(animateBars, 50); };
+
+    // Boot
+    fetchStatus();
+    setInterval(fetchStatus, 30000);
+</script>
+{% endblock %}

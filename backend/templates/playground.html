@@ -1,0 +1,1161 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Python Playground | Sushant Sinha{% endblock %}
+{% block nav_status %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── Layout ── */
+    .playground-page {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        padding-top: 64px;
+        background: #0d1117;
+        overflow: hidden;
+    }
+
+    /* ── Top bar ── */
+    .pg-topbar {
+        display: flex;
+        align-items: center;
+        gap: .8rem;
+        padding: .5rem 1rem;
+        background: #161b22;
+        border-bottom: 1px solid #30363d;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+    }
+
+    .pg-title {
+        font-family: 'Orbitron', monospace;
+        font-size: .8rem;
+        color: #00f5d4;
+        letter-spacing: .1em;
+        margin-right: .5rem;
+    }
+
+    .pg-examples {
+        display: flex;
+        gap: .4rem;
+        flex-wrap: wrap;
+        flex: 1;
+    }
+
+    .pg-example-btn {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .72rem;
+        padding: .3rem .8rem;
+        border: 1px solid #30363d;
+        background: transparent;
+        color: #8b949e;
+        cursor: pointer;
+        transition: all .2s;
+        letter-spacing: .05em;
+    }
+
+    .pg-example-btn:hover,
+    .pg-example-btn.active {
+        border-color: #00f5d4;
+        color: #00f5d4;
+        background: rgba(0, 245, 212, .06);
+    }
+
+    .pg-actions {
+        display: flex;
+        gap: .5rem;
+        margin-left: auto;
+        align-items: center;
+    }
+
+    .pg-run-btn {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .8rem;
+        letter-spacing: .12em;
+        padding: .4rem 1.2rem;
+        border: 1px solid #00f5d4;
+        background: rgba(0, 245, 212, .1);
+        color: #00f5d4;
+        cursor: pointer;
+        transition: all .2s;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+    .pg-run-btn:hover:not(:disabled) {
+        background: #00f5d4;
+        color: #0d1117;
+    }
+
+    .pg-run-btn:disabled {
+        opacity: .5;
+        cursor: not-allowed;
+    }
+
+    .pg-clear-btn {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .72rem;
+        padding: .4rem .9rem;
+        border: 1px solid #30363d;
+        background: transparent;
+        color: #8b949e;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+    .pg-clear-btn:hover {
+        border-color: #ff2d6b;
+        color: #ff2d6b;
+    }
+
+    .pg-status {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .7rem;
+        color: #8b949e;
+        letter-spacing: .1em;
+        white-space: nowrap;
+    }
+
+    .pg-status.ready {
+        color: #28c840;
+    }
+
+    .pg-status.loading {
+        color: #f5c518;
+    }
+
+    .pg-status.running {
+        color: #7b2fff;
+    }
+
+    .pg-status.error {
+        color: #ff2d6b;
+    }
+
+    /* ── Main split pane ── */
+    .pg-split {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    /* ── Editor pane ── */
+    .pg-editor-pane {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        border-right: 1px solid #30363d;
+    }
+
+    .pg-editor-header {
+        display: flex;
+        align-items: center;
+        gap: .8rem;
+        padding: .4rem 1rem;
+        background: #161b22;
+        border-bottom: 1px solid #21262d;
+        flex-shrink: 0;
+    }
+
+    .pg-tab {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .75rem;
+        color: #8b949e;
+        padding: .25rem .8rem;
+        border-bottom: 2px solid transparent;
+    }
+
+    .pg-tab.active {
+        color: #e6edf3;
+        border-bottom-color: #00f5d4;
+    }
+
+    .pg-tab-icon {
+        margin-right: .3rem;
+        font-size: .7rem;
+    }
+
+    .pg-line-count {
+        margin-left: auto;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .68rem;
+        color: #484f58;
+    }
+
+    #monaco-editor {
+        flex: 1;
+    }
+
+    /* ── Output pane ── */
+    .pg-output-pane {
+        width: 420px;
+        min-width: 280px;
+        display: flex;
+        flex-direction: column;
+        background: #0d1117;
+    }
+
+    .pg-output-header {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        padding: .4rem 1rem;
+        background: #161b22;
+        border-bottom: 1px solid #21262d;
+        flex-shrink: 0;
+    }
+
+    .pg-output-title {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .75rem;
+        color: #8b949e;
+        letter-spacing: .1em;
+    }
+
+    .pg-output-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #484f58;
+    }
+
+    .pg-output-dot.running {
+        background: #7b2fff;
+        animation: blink .8s infinite;
+    }
+
+    .pg-output-dot.done {
+        background: #28c840;
+    }
+
+    .pg-output-dot.error {
+        background: #ff2d6b;
+    }
+
+    #pg-output {
+        flex: 1;
+        overflow-y: auto;
+        padding: .8rem 1rem;
+        font-family: 'Cascadia Code', 'Fira Code', 'Share Tech Mono', monospace;
+        font-size: .82rem;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        word-break: break-all;
+        background: #0d1117;
+        color: #e6edf3;
+    }
+
+    #pg-output::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    #pg-output::-webkit-scrollbar-track {
+        background: #0d1117;
+    }
+
+    #pg-output::-webkit-scrollbar-thumb {
+        background: #30363d;
+    }
+
+    .out-line-stdout {
+        color: #e6edf3;
+    }
+
+    .out-line-stderr {
+        color: #ff7b72;
+    }
+
+    .out-line-result {
+        color: #79c0ff;
+    }
+
+    .out-line-info {
+        color: #8b949e;
+        font-style: italic;
+    }
+
+    .out-line-time {
+        color: #3fb950;
+        font-size: .72rem;
+    }
+
+    .out-line-sep {
+        color: #21262d;
+        user-select: none;
+    }
+
+    .out-error-header {
+        color: #ff7b72;
+        font-weight: bold;
+    }
+
+    .out-traceback {
+        color: #ffa657;
+    }
+
+    /* ── Resize handle ── */
+    .pg-resize-handle {
+        width: 4px;
+        background: #21262d;
+        cursor: col-resize;
+        transition: background .2s;
+        flex-shrink: 0;
+    }
+
+    .pg-resize-handle:hover {
+        background: #00f5d4;
+    }
+
+    /* ── Bottom status bar ── */
+    .pg-statusbar {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding: .25rem 1rem;
+        background: #00f5d4;
+        flex-shrink: 0;
+    }
+
+    .pg-statusbar-item {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .68rem;
+        color: #0d1117;
+        letter-spacing: .08em;
+    }
+
+    .pg-statusbar-item b {
+        font-weight: 700;
+    }
+
+    /* ── Loading overlay ── */
+    .pg-loading-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(13, 17, 23, .92);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1.2rem;
+        z-index: 100;
+    }
+
+    .pg-loading-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 1.1rem;
+        color: #00f5d4;
+        letter-spacing: .1em;
+    }
+
+    .pg-loading-sub {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .8rem;
+        color: #8b949e;
+        letter-spacing: .1em;
+    }
+
+    .pg-loading-bar-wrap {
+        width: 280px;
+        height: 3px;
+        background: #21262d;
+        overflow: hidden;
+    }
+
+    .pg-loading-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #00f5d4, #7b2fff);
+        animation: pgload 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pgload {
+        0% {
+            width: 0%;
+            margin-left: 0%;
+        }
+
+        50% {
+            width: 60%;
+            margin-left: 20%;
+        }
+
+        100% {
+            width: 0%;
+            margin-left: 100%;
+        }
+    }
+
+    /* ── Keyboard shortcut hint ── */
+    .pg-shortcut {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .65rem;
+        color: #484f58;
+        margin-left: auto;
+    }
+
+    kbd {
+        background: #21262d;
+        border: 1px solid #30363d;
+        border-radius: 3px;
+        padding: 0 4px;
+        font-size: .65rem;
+        color: #8b949e;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+        .pg-split {
+            flex-direction: column;
+        }
+
+        .pg-output-pane {
+            width: 100%;
+            height: 220px;
+            border-right: none;
+            border-top: 1px solid #30363d;
+        }
+
+        .pg-resize-handle {
+            display: none;
+        }
+
+        .pg-examples {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="playground-page" style="position:relative">
+
+    <!-- Loading overlay -->
+    <div class="pg-loading-overlay" id="pg-loading">
+        <div class="pg-loading-title">INITIALISING PYTHON</div>
+        <div class="pg-loading-sub" id="pg-loading-msg">Loading Pyodide runtime...</div>
+        <div class="pg-loading-bar-wrap">
+            <div class="pg-loading-bar"></div>
+        </div>
+    </div>
+
+    <!-- Top bar -->
+    <div class="pg-topbar">
+        <span class="pg-title">⬡ PLAYGROUND</span>
+
+        <div class="pg-examples" id="pg-examples">
+            <!-- Filled by JS -->
+        </div>
+
+        <div class="pg-actions">
+            <span class="pg-status loading" id="pg-status">LOADING PYTHON...</span>
+            <span class="pg-shortcut"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to run</span>
+            <button class="pg-clear-btn" onclick="clearOutput()">CLEAR</button>
+            <button class="pg-run-btn" id="pg-run-btn" onclick="runCode()" disabled>
+                ▶ RUN
+            </button>
+        </div>
+    </div>
+
+    <!-- Split pane -->
+    <div class="pg-split" id="pg-split">
+
+        <!-- Editor -->
+        <div class="pg-editor-pane" id="pg-editor-pane">
+            <div class="pg-editor-header">
+                <span class="pg-tab active"><span class="pg-tab-icon">🐍</span>main.py</span>
+                <span class="pg-line-count" id="pg-line-count">Ln 1, Col 1</span>
+            </div>
+            <div id="monaco-editor"></div>
+        </div>
+
+        <!-- Resize handle -->
+        <div class="pg-resize-handle" id="pg-resize-handle"></div>
+
+        <!-- Output -->
+        <div class="pg-output-pane">
+            <div class="pg-output-header">
+                <div class="pg-output-dot" id="out-dot"></div>
+                <span class="pg-output-title">OUTPUT</span>
+                <span style="margin-left:auto;font-family:'Share Tech Mono',monospace;font-size:.65rem;color:#484f58"
+                    id="out-runtime"></span>
+            </div>
+            <div id="pg-output"><span class="out-line-info">// Output will appear here after you run your code</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Status bar -->
+    <div class="pg-statusbar">
+        <span class="pg-statusbar-item">Python <b id="sb-pyver">3.x</b></span>
+        <span class="pg-statusbar-item">Pyodide <b>WASM</b></span>
+        <span class="pg-statusbar-item">Monaco <b>Editor</b></span>
+        <span class="pg-statusbar-item" style="margin-left:auto">Runs in browser · No server execution</span>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Monaco Editor from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+
+<script>
+    /* ════════════════════════════════════════════
+       PLAYGROUND.JS — Monaco + Pyodide
+       ════════════════════════════════════════════ */
+
+    let editor = null;
+    let pyodide = null;
+    let isRunning = false;
+
+    /* ── Code examples ───────────────────────── */
+    const EXAMPLES = [
+        {
+            label: 'Hello World',
+            code: `# Classic starter
+# print("Hello from Sushant's Playground! 🐍")
+#print("Python is running in your browser via Pyodide + WebAssembly")
+`
+        },
+        {
+            label: 'Data Structures',
+            code: `# Python data structures demo
+from collections import Counter, defaultdict
+
+# List comprehensions
+squares = [x**2 for x in range(1, 11)]
+print("Squares:", squares)
+
+# Dict comprehension
+word_len = {w: len(w) for w in ["Django", "Python", "Redis", "PostgreSQL"]}
+print("\\nWord lengths:")
+for word, length in sorted(word_len.items(), key=lambda x: -x[1]):
+    print(f"  {word:<12} {length} chars")
+
+# Counter
+tech_stack = ["Python","Django","Python","Redis","PostgreSQL","Python","Django"]
+count = Counter(tech_stack)
+print("\\nTech frequency:", dict(count.most_common()))
+
+# defaultdict
+graph = defaultdict(list)
+edges = [("API", "Auth"), ("API", "Blog"), ("Blog", "DB"), ("Auth", "DB")]
+for src, dst in edges:
+    graph[src].append(dst)
+print("\\nDependency graph:")
+for node, deps in graph.items():
+    print(f"  {node} → {deps}")
+`
+        },
+        {
+            label: 'OOP & Decorators',
+            code: `# OOP + decorators — production patterns
+import time
+from functools import wraps
+
+def timer(func):
+    """Decorator to measure execution time."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        t0 = time.perf_counter()
+        result = func(*args, **kwargs)
+        ms = (time.perf_counter() - t0) * 1000
+        print(f"  ⏱  {func.__name__} took {ms:.2f}ms")
+        return result
+    return wrapper
+
+def retry(max_attempts=3, delay=0.01):
+    """Decorator for automatic retry on failure."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    if attempt == max_attempts:
+                        raise
+                    print(f"  Attempt {attempt} failed: {e}. Retrying...")
+                    time.sleep(delay)
+        return wrapper
+    return decorator
+
+class APIClient:
+    """Simulates a backend API client."""
+
+    def __init__(self, base_url: str, timeout: int = 30):
+        self.base_url = base_url
+        self.timeout  = timeout
+        self._cache   = {}
+
+    @timer
+    def fetch(self, endpoint: str) -> dict:
+        if endpoint in self._cache:
+            return {"source": "cache", "data": self._cache[endpoint]}
+        # Simulate response
+        data = {"endpoint": endpoint, "status": "ok", "items": list(range(5))}
+        self._cache[endpoint] = data
+        return {"source": "network", "data": data}
+
+    @retry(max_attempts=3)
+    def post(self, endpoint: str, payload: dict) -> dict:
+        if not payload:
+            raise ValueError("Payload cannot be empty")
+        return {"created": True, "id": hash(str(payload)) % 10000}
+
+    def __repr__(self):
+        return f"APIClient(url={self.base_url!r}, cached={len(self._cache)})"
+
+
+client = APIClient("https://api.sushant.dev")
+print("Client:", client)
+print()
+
+print("Fetching /users (first call — network):")
+r1 = client.fetch("/users")
+print(f"  Source: {r1['source']}")
+
+print("\\nFetching /users (second call — cache):")
+r2 = client.fetch("/users")
+print(f"  Source: {r2['source']}")
+
+print("\\nPOST /posts:")
+r3 = client.post("/posts", {"title": "Django Best Practices"})
+print(f"  Result: {r3}")
+
+print("\\nClient state:", client)
+`
+        },
+        {
+            label: 'Algorithms',
+            code: `# Classic algorithms — clean Python style
+
+def binary_search(arr: list, target: int) -> int:
+    lo, hi = 0, len(arr) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if arr[mid] == target:   return mid
+        elif arr[mid] < target:  lo = mid + 1
+        else:                    hi = mid - 1
+    return -1
+
+def merge_sort(arr: list) -> list:
+    if len(arr) <= 1: return arr
+    mid  = len(arr) // 2
+    left = merge_sort(arr[:mid])
+    right= merge_sort(arr[mid:])
+    result, i, j = [], 0, 0
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            result.append(left[i]); i += 1
+        else:
+            result.append(right[j]); j += 1
+    return result + left[i:] + right[j:]
+
+def fibonacci(n: int, memo: dict = {}) -> int:
+    if n <= 1: return n
+    if n not in memo:
+        memo[n] = fibonacci(n-1, memo) + fibonacci(n-2, memo)
+    return memo[n]
+
+def is_palindrome(s: str) -> bool:
+    s = ''.join(c.lower() for c in s if c.isalnum())
+    return s == s[::-1]
+
+# ── Demo ──
+import random, time
+
+# Binary search
+data = sorted(random.sample(range(1000), 20))
+target = data[7]
+idx = binary_search(data, target)
+print(f"Binary Search: found {target} at index {idx} ✓")
+
+# Merge sort
+unsorted = random.sample(range(100), 10)
+sorted_  = merge_sort(unsorted)
+print(f"\\nMerge Sort:")
+print(f"  Before: {unsorted}")
+print(f"  After:  {sorted_}")
+
+# Fibonacci
+t0 = time.perf_counter()
+fibs = [fibonacci(n) for n in range(15)]
+ms = (time.perf_counter() - t0) * 1000
+print(f"\\nFibonacci (memoized, {ms:.3f}ms):")
+print(f"  {fibs}")
+
+# Palindrome
+tests = ["racecar", "Django", "A man a plan a canal Panama", "Python"]
+print("\\nPalindrome check:")
+for t in tests:
+    print(f"  {t!r:<35} → {is_palindrome(t)}")
+`
+        },
+        {
+            label: 'Data Science',
+            code: `# Data analysis with Python stdlib (no numpy needed)
+import statistics
+import math
+from collections import Counter
+
+# Simulate monthly server response times (ms)
+import random
+random.seed(42)
+response_times = [random.gauss(120, 30) for _ in range(200)]
+response_times = [max(10, t) for t in response_times]  # floor at 10ms
+
+# Basic stats
+mean   = statistics.mean(response_times)
+median = statistics.median(response_times)
+stdev  = statistics.stdev(response_times)
+p95    = sorted(response_times)[int(0.95 * len(response_times))]
+p99    = sorted(response_times)[int(0.99 * len(response_times))]
+
+print("=== API Response Time Analysis ===")
+print(f"  Samples  : {len(response_times)}")
+print(f"  Mean     : {mean:.1f} ms")
+print(f"  Median   : {median:.1f} ms")
+print(f"  Std Dev  : {stdev:.1f} ms")
+print(f"  P95      : {p95:.1f} ms")
+print(f"  P99      : {p99:.1f} ms")
+print(f"  Min/Max  : {min(response_times):.1f} / {max(response_times):.1f} ms")
+
+# Histogram (ASCII)
+buckets = [0] * 10
+bucket_size = 50
+for t in response_times:
+    idx = min(9, int(t / bucket_size))
+    buckets[idx] += 1
+
+print("\\n=== Latency Distribution ===")
+max_count = max(buckets)
+for i, count in enumerate(buckets):
+    label = f"{i*bucket_size:>4}-{(i+1)*bucket_size:<4}ms"
+    bar   = "█" * int(count / max_count * 30)
+    print(f"  {label} │{bar:<30}│ {count:>3}")
+
+# SLA check
+sla_threshold = 200  # ms
+violations = sum(1 for t in response_times if t > sla_threshold)
+pct = violations / len(response_times) * 100
+status = "✓ PASS" if pct < 5 else "✗ FAIL"
+print(f"\\n=== SLA Check (<{sla_threshold}ms) ===")
+print(f"  Violations: {violations}/{len(response_times)} ({pct:.1f}%) → {status}")
+`
+        },
+        {
+            label: 'Django Patterns',
+            code: `# Django patterns you'd use in production
+# (Simulated — no actual Django running here)
+
+# ── 1. Custom Manager ──────────────────────
+class QuerySetSimulator:
+    """Simulates Django QuerySet chaining."""
+    def __init__(self, data):
+        self._data   = data
+        self._filters= []
+        self._order  = None
+        self._limit  = None
+
+    def filter(self, **kwargs):
+        qs = QuerySetSimulator(self._data)
+        qs._filters = self._filters + [kwargs]
+        qs._order   = self._order
+        qs._limit   = self._limit
+        return qs
+
+    def order_by(self, field):
+        qs = QuerySetSimulator(self._data)
+        qs._filters = self._filters
+        qs._order   = field
+        qs._limit   = self._limit
+        return qs
+
+    def __getitem__(self, s):
+        qs = QuerySetSimulator(self._data)
+        qs._filters = self._filters
+        qs._order   = self._order
+        qs._limit   = s
+        return qs
+
+    def _evaluate(self):
+        result = list(self._data)
+        for f in self._filters:
+            for k, v in f.items():
+                result = [r for r in result if r.get(k) == v]
+        if self._order:
+            reverse = self._order.startswith('-')
+            key = self._order.lstrip('-')
+            result.sort(key=lambda x: x.get(key, ''), reverse=reverse)
+        if isinstance(self._limit, slice):
+            result = result[self._limit]
+        return result
+
+    def __iter__(self): return iter(self._evaluate())
+    def count(self):    return len(self._evaluate())
+    def first(self):
+        r = self._evaluate()
+        return r[0] if r else None
+
+
+# ── Sample data ────────────────────────────
+posts = [
+    {"id":1,"title":"Django REST Best Practices","status":"published","views":1240,"category":"backend"},
+    {"id":2,"title":"Redis Caching in Django",    "status":"published","views":893, "category":"devops"},
+    {"id":3,"title":"Draft: Kafka Integration",  "status":"draft",    "views":0,   "category":"backend"},
+    {"id":4,"title":"PostgreSQL Query Tuning",   "status":"published","views":2100,"category":"database"},
+    {"id":5,"title":"Docker Multi-stage Builds", "status":"published","views":567, "category":"devops"},
+]
+
+qs = QuerySetSimulator(posts)
+
+print("=== Django ORM Patterns (simulated) ===\\n")
+
+# Chained filters
+published = qs.filter(status="published")
+print(f"Published posts: {published.count()}")
+
+backend_posts = qs.filter(status="published").filter(category="backend")
+print(f"\\nPublished backend posts:")
+for p in backend_posts:
+    print(f"  [{p['id']}] {p['title']} ({p['views']} views)")
+
+# Order by views desc
+print("\\nTop posts by views:")
+for p in qs.filter(status="published").order_by("-views"):
+    bar = "▓" * (p['views'] // 200)
+    print(f"  {p['views']:>5} {bar:<12} {p['title']}")
+
+# First published
+top = qs.filter(status="published").order_by("-views").first()
+print(f"\\nMost viewed: \"{top['title']}\" with {top['views']} views")
+
+# ── 2. Signal pattern ──────────────────────
+print("\\n=== Signal Pattern ===")
+_receivers = {}
+
+def receiver(signal):
+    def decorator(func):
+        _receivers.setdefault(signal, []).append(func)
+        return func
+    return decorator
+
+def send_signal(signal, **kwargs):
+    for fn in _receivers.get(signal, []):
+        fn(**kwargs)
+
+@receiver("post_save")
+def invalidate_cache(instance=None, **kw):
+    print(f"  Cache invalidated for post #{instance['id']}")
+
+@receiver("post_save")
+def update_search_index(instance=None, **kw):
+    print(f"  Search index updated: {instance['title']!r}")
+
+print("Saving post...")
+send_signal("post_save", instance=posts[0])
+`
+        },
+    ];
+
+    /* ── Load examples into topbar ───────────── */
+    function loadExamples() {
+        const container = document.getElementById('pg-examples');
+        EXAMPLES.forEach((ex, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'pg-example-btn' + (i === 0 ? ' active' : '');
+            btn.textContent = ex.label;
+            btn.dataset.idx = i;
+            btn.onclick = () => loadExample(i);
+            container.appendChild(btn);
+        });
+    }
+
+    function loadExample(idx) {
+        if (!editor) return;
+        document.querySelectorAll('.pg-example-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.pg-example-btn')[idx]?.classList.add('active');
+        editor.setValue(EXAMPLES[idx].code);
+        editor.setPosition({ lineNumber: 1, column: 1 });
+        editor.focus();
+        clearOutput();
+    }
+
+    /* ── Init Monaco ─────────────────────────── */
+    function initMonaco() {
+        return new Promise((resolve) => {
+            require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' } });
+            require(['vs/editor/editor.main'], function () {
+
+                // Custom dark theme matching portfolio aesthetic
+                monaco.editor.defineTheme('portfolio-dark', {
+                    base: 'vs-dark',
+                    inherit: true,
+                    rules: [
+                        { token: 'comment', foreground: '6e7681', fontStyle: 'italic' },
+                        { token: 'keyword', foreground: 'ff7b72' },
+                        { token: 'string', foreground: 'a5d6ff' },
+                        { token: 'number', foreground: 'ffa657' },
+                        { token: 'type', foreground: 'f8c555' },
+                        { token: 'function', foreground: 'd2a8ff' },
+                        { token: 'variable', foreground: 'e6edf3' },
+                        { token: 'delimiter', foreground: '8b949e' },
+                    ],
+                    colors: {
+                        'editor.background': '#0d1117',
+                        'editor.foreground': '#e6edf3',
+                        'editor.lineHighlightBackground': '#161b22',
+                        'editor.selectionBackground': '#264f7855',
+                        'editorCursor.foreground': '#00f5d4',
+                        'editorLineNumber.foreground': '#484f58',
+                        'editorLineNumber.activeForeground': '#e6edf3',
+                        'editorIndentGuide.background': '#21262d',
+                        'editorIndentGuide.activeBackground': '#30363d',
+                        'scrollbarSlider.background': '#30363d',
+                        'scrollbarSlider.hoverBackground': '#484f58',
+                    }
+                });
+
+                editor = monaco.editor.create(document.getElementById('monaco-editor'), {
+                    value: EXAMPLES[0].code,
+                    language: 'python',
+                    theme: 'portfolio-dark',
+                    fontSize: 14,
+                    fontFamily: "'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Share Tech Mono', monospace",
+                    fontLigatures: true,
+                    lineNumbers: 'on',
+                    minimap: { enabled: true, scale: 1 },
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
+                    wordWrap: 'on',
+                    tabSize: 4,
+                    insertSpaces: true,
+                    formatOnPaste: true,
+                    suggestOnTriggerCharacters: true,
+                    quickSuggestions: true,
+                    parameterHints: { enabled: true },
+                    folding: true,
+                    bracketPairColorization: { enabled: true },
+                    guides: { bracketPairs: true, indentation: true },
+                    renderWhitespace: 'selection',
+                    smoothScrolling: true,
+                    cursorBlinking: 'smooth',
+                    cursorSmoothCaretAnimation: 'on',
+                    padding: { top: 12, bottom: 12 },
+                });
+
+                // Ctrl+Enter to run
+                editor.addCommand(
+                    monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
+                    () => runCode()
+                );
+
+                // Update line/col in status
+                editor.onDidChangeCursorPosition(e => {
+                    document.getElementById('pg-line-count').textContent =
+                        `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
+                });
+
+                resolve();
+            });
+        });
+    }
+
+    /* ── Load Pyodide ────────────────────────── */
+    async function loadPyodide_() {
+        setStatus('LOADING PYTHON...', 'loading');
+        setLoadingMsg('Loading Pyodide WebAssembly runtime (~10MB)...');
+
+        // Dynamically load Pyodide
+        await loadScript('https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js');
+        setLoadingMsg('Initialising Python interpreter...');
+
+        pyodide = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/' });
+
+        setLoadingMsg('Warming up...');
+
+        // Grab Python version
+        const version = pyodide.runPython('import sys; sys.version.split()[0]');
+        document.getElementById('sb-pyver').textContent = version;
+
+        // Pre-import common stdlib modules
+        pyodide.runPython(`
+import sys, os, math, time, random, json
+import statistics, collections, itertools, functools
+from collections import Counter, defaultdict, OrderedDict
+from functools import wraps, partial, lru_cache
+from itertools import chain, product, permutations, combinations
+`);
+
+        setStatus('READY', 'ready');
+        setLoadingMsg('');
+        document.getElementById('pg-loading').style.display = 'none';
+        document.getElementById('pg-run-btn').disabled = false;
+
+        appendOutput('<span class="out-line-info">Python ' + version + ' (Pyodide/WASM) ready</span>\n');
+        appendOutput('<span class="out-line-info">Standard library pre-loaded: math, random, statistics, collections, itertools, functools</span>\n');
+        appendOutput('<span class="out-line-sep">─────────────────────────────────────────────────</span>\n\n');
+    }
+
+    /* ── Run code ────────────────────────────── */
+    async function runCode() {
+        if (!pyodide || isRunning) return;
+        isRunning = true;
+
+        const code = editor.getValue();
+        if (!code.trim()) return;
+
+        // UI state
+        document.getElementById('pg-run-btn').disabled = true;
+        document.getElementById('pg-run-btn').innerHTML = '⏳ RUNNING';
+        setStatus('RUNNING', 'running');
+        setDot('running');
+
+        const sep = '<span class="out-line-sep">─────────────────────────────────────────────────</span>\n';
+        appendOutput(sep);
+
+        const t0 = performance.now();
+
+        try {
+            // Redirect stdout/stderr
+            let stdout = '', stderr = '';
+
+            pyodide.setStdout({ batched: (s) => { stdout += s + '\n'; } });
+            pyodide.setStderr({ batched: (s) => { stderr += s + '\n'; } });
+
+            const result = await pyodide.runPythonAsync(code);
+
+            const ms = (performance.now() - t0).toFixed(1);
+
+            if (stdout) {
+                appendOutput('<span class="out-line-stdout">' + escapeHtml(stdout) + '</span>');
+            }
+            if (stderr) {
+                appendOutput('<span class="out-line-stderr">' + escapeHtml(stderr) + '</span>');
+            }
+            if (result !== undefined && result !== null) {
+                appendOutput('<span class="out-line-result">→ ' + escapeHtml(String(result)) + '</span>\n');
+            }
+
+            appendOutput('<span class="out-line-time">✓ Completed in ' + ms + 'ms</span>\n');
+            document.getElementById('out-runtime').textContent = ms + 'ms';
+
+            setStatus('READY', 'ready');
+            setDot('done');
+
+        } catch (err) {
+            const ms = (performance.now() - t0).toFixed(1);
+            const errStr = String(err);
+
+            // Parse traceback nicely
+            const lines = errStr.split('\n');
+            let output = '<span class="out-error-header">✗ ' + escapeHtml(lines[lines.length - 2] || lines[0]) + '</span>\n';
+            if (lines.length > 2) {
+                output += '<span class="out-traceback">' + escapeHtml(lines.slice(0, -1).join('\n')) + '</span>\n';
+            }
+            appendOutput(output);
+            appendOutput('<span class="out-line-time">✗ Failed in ' + ms + 'ms</span>\n');
+            document.getElementById('out-runtime').textContent = ms + 'ms';
+
+            setStatus('ERROR', 'error');
+            setDot('error');
+        }
+
+        // Reset
+        isRunning = false;
+        document.getElementById('pg-run-btn').disabled = false;
+        document.getElementById('pg-run-btn').innerHTML = '▶ RUN';
+    }
+
+    /* ── Helpers ─────────────────────────────── */
+    function appendOutput(html) {
+        const el = document.getElementById('pg-output');
+        el.innerHTML += html;
+        el.scrollTop = el.scrollHeight;
+    }
+
+    function clearOutput() {
+        document.getElementById('pg-output').innerHTML = '';
+        document.getElementById('out-runtime').textContent = '';
+        setDot('');
+    }
+
+    function setStatus(text, cls) {
+        const el = document.getElementById('pg-status');
+        el.textContent = text;
+        el.className = 'pg-status ' + cls;
+    }
+
+    function setDot(cls) {
+        const el = document.getElementById('out-dot');
+        el.className = 'pg-output-dot ' + cls;
+    }
+
+    function setLoadingMsg(msg) {
+        const el = document.getElementById('pg-loading-msg');
+        if (el) el.textContent = msg;
+    }
+
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function loadScript(src) {
+        return new Promise((resolve, reject) => {
+            if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+            const s = document.createElement('script');
+            s.src = src;
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+        });
+    }
+
+    /* ── Resize handle ───────────────────────── */
+    (function initResize() {
+        const handle = document.getElementById('pg-resize-handle');
+        const split = document.getElementById('pg-split');
+        const edPane = document.getElementById('pg-editor-pane');
+        if (!handle) return;
+
+        let dragging = false, startX = 0, startW = 0;
+
+        handle.addEventListener('mousedown', e => {
+            dragging = true;
+            startX = e.clientX;
+            startW = edPane.offsetWidth;
+            document.body.style.userSelect = 'none';
+            document.body.style.cursor = 'col-resize';
+        });
+
+        document.addEventListener('mousemove', e => {
+            if (!dragging) return;
+            const newW = Math.max(300, Math.min(split.offsetWidth - 280, startW + e.clientX - startX));
+            edPane.style.flex = 'none';
+            edPane.style.width = newW + 'px';
+            if (editor) editor.layout();
+        });
+
+        document.addEventListener('mouseup', () => {
+            dragging = false;
+            document.body.style.userSelect = '';
+            document.body.style.cursor = '';
+        });
+    })();
+
+    /* ── Boot ────────────────────────────────── */
+    (async function boot() {
+        loadExamples();
+        await initMonaco();
+        await loadPyodide_();
+    })();
+</script>
+{% endblock %}
