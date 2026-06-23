@@ -259,3 +259,71 @@ document.addEventListener("keydown", function (e) {
     }
   }
 });
+
+/* ============================================
+   THEME TOGGLE — Dark/Light theme
+   ============================================ */
+
+(function initThemeToggle() {
+  const STORAGE_KEY = "theme-preference";
+  const html = document.documentElement;
+  const toggleBtn = document.getElementById("theme-toggle");
+  let themeIcon = null;
+
+  console.log("🎨 Theme toggle init - button:", toggleBtn);
+
+  // Get stored preference or default to dark
+  function getThemePreference() {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    console.log("📦 Stored theme:", stored);
+    if (stored) return stored;
+    return "dark"; // Default to dark
+  }
+
+  // Apply theme to DOM
+  function applyTheme(theme) {
+    console.log("🎨 Applying theme:", theme);
+
+    if (!themeIcon) {
+      themeIcon = toggleBtn?.querySelector(".theme-icon");
+    }
+
+    // Remove all theme classes first
+    html.classList.remove("light-theme", "dark-theme");
+
+    // Add the appropriate theme class
+    if (theme === "light") {
+      html.classList.add("light-theme");
+      if (themeIcon) themeIcon.textContent = "☀️";
+    } else {
+      html.classList.add("dark-theme");
+      if (themeIcon) themeIcon.textContent = "🌙";
+    }
+
+    document.documentElement.setAttribute("data-theme", theme);
+    console.log("✅ Theme classes:", html.className);
+  }
+
+  // Initialize theme on page load
+  const savedTheme = getThemePreference();
+  applyTheme(savedTheme);
+
+  // Toggle on button click
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", function (e) {
+      console.log("🖱️ Theme toggle clicked");
+      e.preventDefault();
+      e.stopPropagation();
+
+      const current = localStorage.getItem(STORAGE_KEY) || "dark";
+      const newTheme = current === "dark" ? "light" : "dark";
+      console.log(`🔄 Toggling from ${current} to ${newTheme}`);
+
+      applyTheme(newTheme);
+      localStorage.setItem(STORAGE_KEY, newTheme);
+      showToast(`Switched to ${newTheme} theme ✓`, false);
+    });
+  } else {
+    console.warn("⚠️ Theme toggle button not found!");
+  }
+})();

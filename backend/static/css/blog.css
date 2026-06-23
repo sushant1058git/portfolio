@@ -120,6 +120,31 @@
   text-decoration: none;
   display: block;
 }
+html.light-theme .blog-list-card {
+  color: rgb(0, 0, 0);
+  box-shadow: rgba(0, 0, 0, 0.06) 0px 2px 8px;
+  background: rgb(255, 255, 255);
+  border-width: 2px;
+  border-style: solid;
+  border-color: rgba(0, 82, 204, 0.2);
+  border-image: initial;
+}
+html.light-theme .list-card-cat {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  color: #5200cc;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+html.light-theme .blog-list-card:hover {
+  border-color: #0052cc;
+  transform: translateY(-6px);
+  box-shadow: 0 4px 16px rgba(0, 82, 204, 0.15);
+  color: #000000;
+}
 .blog-list-card:hover {
   border-color: rgba(0, 245, 212, 0.4);
   transform: translateY(-5px);
@@ -145,6 +170,7 @@
   color: #fff;
   margin-bottom: 0.8rem;
   line-height: 1.4;
+  font-weight: bold;
 }
 .list-card-excerpt {
   font-size: 0.9rem;

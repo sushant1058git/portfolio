@@ -227,6 +227,10 @@
   background: var(--accent2);
 }
 
+html.light-theme .timeline-header:hover {
+  background: var(--bg2);
+}
+
 .timeline-header {
   padding: 1.4rem 1.6rem;
   background: var(--bg3);
@@ -237,7 +241,7 @@
   user-select: none;
 }
 .timeline-header:hover {
-  border-color: rgba(0, 245, 212, 0.3);
+  border-color: #0052cc;
   background: rgba(13, 31, 45, 0.9);
 }
 .timeline-item.open .timeline-header {
@@ -257,6 +261,7 @@
   font-family: "Orbitron", monospace;
   font-size: 0.95rem;
   color: #fff;
+  font-weight: bold;
 }
 .tl-company {
   font-size: 0.9rem;
@@ -290,7 +295,7 @@
     max-height 0.45s ease,
     opacity 0.3s;
   opacity: 0;
-  background: rgba(5, 10, 15, 0.6);
+  /* background: rgba(5, 10, 15, 0.6); */
   border: 1px solid transparent;
   border-top: none;
 }
@@ -365,6 +370,9 @@
   gap: 1.5rem;
   transition: border-color 0.3s;
 }
+html.light-theme .currently-card:hover {
+  border-color: #0052cc;
+}
 .currently-card:hover {
   border-color: rgba(0, 245, 212, 0.3);
 }
@@ -381,6 +389,7 @@
   font-family: "Orbitron", monospace;
   font-size: 0.9rem;
   color: #fff;
+  font-weight: bold;
 }
 .currently-tags {
   display: flex;
@@ -395,6 +404,12 @@
   border: 1px solid rgba(0, 245, 212, 0.2);
   color: var(--accent);
   background: rgba(0, 245, 212, 0.04);
+}
+html.light-theme .currently-tag {
+  border-color: rgba(0, 82, 204, 0.2);
+  color: #0052cc;
+  /* Increased alpha for better contrast */
+  background: rgba(0, 82, 204, 0.08);
 }
 .currently-progress {
   min-width: 120px;

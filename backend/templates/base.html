@@ -14,6 +14,20 @@
   {% load static %}
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   {% block extra_css %}{% endblock %}
+
+  <!-- Theme preference check (prevent flash) -->
+  <script>
+    try {
+      const theme = localStorage.getItem('theme-preference') || 'dark';
+      if (theme === 'light') {
+        document.documentElement.classList.add('light-theme');
+        document.documentElement.classList.remove('dark-theme');
+      } else {
+        document.documentElement.classList.add('dark-theme');
+        document.documentElement.classList.remove('light-theme');
+      }
+    } catch (e) { }
+  </script>
 </head>
 
 <body>
@@ -89,6 +103,10 @@
       </li>
     </ul>
     <div class="nav-actions">
+      <!-- Theme Toggle -->
+      <button class="nav-theme-toggle" id="theme-toggle" title="Toggle dark/light theme" aria-label="Toggle theme">
+        <span class="theme-icon">🌙</span>
+      </button>
       <!-- Logged-out state -->
       <button class="nav-login-btn" id="nav-login-btn" onclick="openLoginModal()">⚿ LOGIN</button>
       <!-- Logged-in state -->
