@@ -52,12 +52,12 @@ html.light-theme {
   --accent: #0052cc;
   --accent2: #5200cc;
   --accent3: #cc0033;
-  --text: #000000;
-  --text-dim: #333333;
-  --border: rgba(0, 0, 0, 0.2);
+  --text: #172033;
+  --text-dim: #52606d;
+  --border: rgba(0, 82, 204, 0.18);
   --glow: 0 0 20px rgba(0, 82, 204, 0.2);
   --glow2: 0 0 20px rgba(82, 0, 204, 0.2);
-  --text-heading: #000000;
+  --text-heading: #101828;
   --card-bg: #ffffff;
   --card-bg2: #f8fafb;
   --nav-bg: #ffffff;
@@ -135,11 +135,11 @@ html.light-theme pre {
 
 /* Light theme comprehensive text & color styling */
 html.light-theme {
-  color: #000000;
+  color: var(--text);
 }
 
 html.light-theme body {
-  color: #000000;
+  color: var(--text);
 }
 
 html.light-theme h1,
@@ -148,11 +148,11 @@ html.light-theme h3,
 html.light-theme h4,
 html.light-theme h5,
 html.light-theme h6 {
-  color: #000000;
+  color: var(--text-heading);
 }
 
 html.light-theme p {
-  color: #000000;
+  color: var(--text);
 }
 
 html.light-theme span,
@@ -1845,4 +1845,130 @@ html.light-theme .pg-editor-pane {
 }
 .nav-dropdown-item:hover .nav-dd-label {
   color: var(--accent);
+}
+
+/* ── Light theme consistency layer ─────────────────────────
+   Shared tokens keep independently styled pages feeling like one product. */
+html.light-theme {
+  --light-surface: #ffffff;
+  --light-surface-muted: #f4f7fb;
+  --light-border: #cbd7e6;
+  --light-primary: #0052cc;
+  --light-primary-hover: #003d99;
+  --light-focus: rgba(0, 82, 204, 0.28);
+}
+
+html.light-theme body,
+html.light-theme .card,
+html.light-theme .modal-box,
+html.light-theme .project-card,
+html.light-theme .blog-list-card,
+html.light-theme .skill-card {
+  color: var(--text);
+}
+
+html.light-theme .btn,
+html.light-theme button.btn {
+  background: var(--light-primary);
+  border-color: var(--light-primary);
+  color: #ffffff !important;
+  box-shadow: none;
+  isolation: isolate;
+  z-index: 0;
+}
+
+html.light-theme .btn::before {
+  background: var(--light-primary);
+  z-index: -1;
+}
+
+html.light-theme .btn:hover,
+html.light-theme button.btn:hover {
+  background: var(--light-primary-hover);
+  border-color: var(--light-primary-hover);
+  color: #ffffff !important;
+  box-shadow: 0 6px 18px rgba(0, 82, 204, 0.22);
+  transform: translateY(-1px);
+}
+
+/* The resume is a secondary, downloadable asset rather than the main CTA. */
+html.light-theme #resume-btn {
+  background: #fff1f5;
+  border-color: #c2185b !important;
+  color: #a30d4c !important;
+}
+
+html.light-theme #resume-btn:hover {
+  background: #c2185b;
+  border-color: #c2185b !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 18px rgba(194, 24, 91, 0.22);
+}
+
+html.light-theme #init-contact-btn {
+  background: #f3efff;
+  border-color: #6d28d9;
+  color: #5b21b6 !important;
+}
+
+html.light-theme #init-contact-btn::before {
+  background: #6d28d9;
+}
+
+html.light-theme #init-contact-btn:hover {
+  background: #6d28d9;
+  border-color: #6d28d9;
+  color: #ffffff !important;
+  box-shadow: 0 6px 18px rgba(109, 40, 217, 0.22);
+}
+
+html.light-theme .btn:focus-visible,
+html.light-theme button:focus-visible,
+html.light-theme a:focus-visible,
+html.light-theme input:focus-visible,
+html.light-theme textarea:focus-visible,
+html.light-theme select:focus-visible {
+  outline: 3px solid var(--light-focus);
+  outline-offset: 2px;
+}
+
+html.light-theme .btn-ghost,
+html.light-theme .nav-theme-toggle,
+html.light-theme .nav-dropdown-btn,
+html.light-theme .cat-btn,
+html.light-theme .page-btn {
+  background: var(--light-surface);
+  border-color: var(--light-border);
+  color: var(--light-primary);
+}
+
+html.light-theme .btn-ghost:hover,
+html.light-theme .nav-theme-toggle:hover,
+html.light-theme .nav-dropdown-btn:hover,
+html.light-theme .cat-btn:hover,
+html.light-theme .cat-btn.active,
+html.light-theme .page-btn:hover,
+html.light-theme .page-btn.active {
+  /* background: #e8f0ff; */
+  border-color: var(--light-primary);
+  color: var(--light-primary);
+}
+
+html.light-theme .form-input,
+html.light-theme .form-textarea,
+html.light-theme input,
+html.light-theme textarea,
+html.light-theme select {
+  background: var(--light-surface);
+  border-color: var(--light-border);
+  color: var(--text);
+}
+
+html.light-theme .form-input:focus,
+html.light-theme .form-textarea:focus,
+html.light-theme input:focus,
+html.light-theme textarea:focus,
+html.light-theme select:focus {
+  border-color: var(--light-primary);
+  box-shadow: 0 0 0 3px var(--light-focus);
 }

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Access Denied | Sushant Sinha{% endblock %}
+
+{% block extra_css %}
+<style>
+    .access-denied-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: calc(100vh - 80px);
+        padding: 2rem;
+    }
+
+    .access-denied-content {
+        text-align: center;
+        max-width: 600px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 3rem 2rem;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        margin-top: 5rem
+    }
+
+    .access-denied-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        filter: drop-shadow(0 0 10px var(--accent3));
+    }
+
+    .access-denied-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--accent3);
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .access-denied-subtitle {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 1.1rem;
+        color: var(--text);
+        margin-bottom: 1.5rem;
+    }
+
+    .access-denied-message {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 0.95rem;
+        color: var(--text-dim);
+        line-height: 1.6;
+        margin-bottom: 2rem;
+    }
+
+    .access-denied-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .access-denied-divider {
+        width: 60px;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--accent3), transparent);
+        margin: 2rem auto;
+    }
+
+    .access-denied-info {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.85rem;
+        color: var(--text-dim);
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .access-denied-info span {
+        color: var(--accent);
+    }
+
+    @media (max-width: 640px) {
+        .access-denied-container {
+            min-height: calc(100vh - 60px);
+            padding: 1rem;
+        }
+
+        .access-denied-content {
+            padding: 2rem 1.5rem;
+        }
+
+        .access-denied-title {
+            font-size: 1.5rem;
+        }
+
+        .access-denied-subtitle {
+            font-size: 1rem;
+        }
+
+        .access-denied-actions {
+            flex-direction: column;
+        }
+
+        .access-denied-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Initialize login redirect tracking from URL query string -->
+<script>
+    console.log('[Access Denied] Page loaded');
+    console.log('[Access Denied] Current URL:', window.location.href);
+    console.log('[Access Denied] Current search params:', window.location.search);
+
+    // Extract next URL from query parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    window._loginNextUrl = urlParams.get('next');
+    console.log('[Access Denied] Next URL from URLSearchParams:', window._loginNextUrl);
+
+    // Fallback: also try manual parsing
+    const nextMatch = window.location.search.match(/[?&]next=([^&]*)/);
+    if (nextMatch && !window._loginNextUrl) {
+        window._loginNextUrl = decodeURIComponent(nextMatch[1]);
+        console.log('[Access Denied] Next URL from regex fallback:', window._loginNextUrl);
+    }
+
+    console.log('[Access Denied] Final _loginNextUrl:', window._loginNextUrl);
+
+    // Make sure functions are available
+    window.addEventListener('load', function () {
+        console.log('[Access Denied] Page fully loaded');
+        console.log('[Access Denied] openLoginModal available:', typeof window.openLoginModal === 'function');
+        console.log('[Access Denied] login-modal element:', document.getElementById('login-modal') ? 'found' : 'NOT found');
+    });
+</script>
+
+<div class="access-denied-container">
+    <div class="access-denied-content">
+        <div class="access-denied-icon">🔐</div>
+        <h1 class="access-denied-title">ACCESS DENIED</h1>
+        <p class="access-denied-subtitle">Authentication Required</p>
+
+        <div class="access-denied-divider"></div>
+
+        <p class="access-denied-message">
+            You do not have permission to access the blog editor. Admin privileges are required to create and manage
+            blog posts.
+        </p>
+
+        <div class="access-denied-actions">
+            <button type="button" class="btn btn-danger" onclick="openLoginModal()">LOGIN →</button>
+            <a href="/blog/" class="btn">BACK TO BLOG</a>
+            <a href="/" class="btn">HOME</a>
+        </div>
+
+        <div class="access-denied-info">
+            <p>If you believe this is an error, please <a href="/#contact" style="color:var(--accent)">contact
+                    support</a></p>
+            <p><span>code</span>: 401 UNAUTHORIZED</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

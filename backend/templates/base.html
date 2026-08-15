@@ -13,12 +13,13 @@
     rel="stylesheet">
   {% load static %}
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
   {% block extra_css %}{% endblock %}
 
   <!-- Theme preference check (prevent flash) -->
   <script>
     try {
-      const theme = localStorage.getItem('theme-preference') || 'dark';
+      const theme = localStorage.getItem('theme-preference') || 'light';
       if (theme === 'light') {
         document.documentElement.classList.add('light-theme');
         document.documentElement.classList.remove('dark-theme');
@@ -78,6 +79,13 @@
           labs <span class="nav-dropdown-arrow">▾</span>
         </button>
         <div class="nav-dropdown-menu" id="nav-dropdown-menu">
+          <a href="/labs/architecture/" class="nav-dropdown-item {% block nav_architecture_lab %}{% endblock %}">
+            <span class="nav-dd-icon">◫</span>
+            <span>
+              <span class="nav-dd-label">ARCHITECTURE LAB</span>
+              <span class="nav-dd-desc">Interactive system design</span>
+            </span>
+          </a>
           <a href="/playground/" class="nav-dropdown-item {% block nav_playground %}{% endblock %}">
             <span class="nav-dd-icon">⬡</span>
             <span>
@@ -90,13 +98,6 @@
             <span>
               <span class="nav-dd-label">STATUS</span>
               <span class="nav-dd-desc">System health dashboard</span>
-            </span>
-          </a>
-          <a href="/api/docs/" class="nav-dropdown-item" target="_blank">
-            <span class="nav-dd-icon">⎗</span>
-            <span>
-              <span class="nav-dd-label">API DOCS</span>
-              <span class="nav-dd-desc">Swagger / OpenAPI</span>
             </span>
           </a>
         </div>

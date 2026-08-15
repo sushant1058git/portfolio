@@ -30,8 +30,6 @@ INSTALLED_APPS = [
     'apps.portfolio',
     'apps.blog',
     'apps.contact',
-    'drf_spectacular'
-
 ]
 
 MIDDLEWARE = [
@@ -107,7 +105,6 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 6,
 }
@@ -128,28 +125,3 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 CONTACT_EMAIL = os.getenv('CONTACT_EMAIL', 'sushant1058jan@gmail.com')
-
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'Sushant Sinha Portfolio API',
-    'DESCRIPTION': (
-        'REST API powering the portfolio — profile, blog, projects, '
-        'contact, and GitHub stats.'
-    ),
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-    'COMPONENT_SPLIT_REQUEST': True,
-    'SWAGGER_UI_SETTINGS': {
-        'deepLinking': True,
-        'persistAuthorization': True,
-        'displayOperationId': True,
-    },
-    'TAGS': [
-        {'name': 'Profile',  'description': 'Portfolio owner profile & resume'},
-        {'name': 'Blog',     'description': 'Blog posts, categories, comments'},
-        {'name': 'Projects', 'description': 'Showcase projects'},
-        {'name': 'Contact',  'description': 'Contact form (rate-limited)'},
-        {'name': 'Auth',     'description': 'Login / logout / session check'},
-        {'name': 'Status',   'description': 'System health dashboard'},
-        {'name': 'GitHub',   'description': 'Live GitHub stats proxy'},
-    ],
-}

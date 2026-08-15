@@ -19,7 +19,7 @@
         <a href="/blog/">BLOG</a> /
         <span id="editor-breadcrumb-post">NEW POST</span>
       </div>
-      <div style="font-family:'Orbitron',monospace;font-size:1.4rem;color:#fff;margin-top:.5rem" id="editor-heading">
+      <div style="font-family:'Orbitron',monospace;font-size:1.4rem;margin-top:.5rem" id="editor-heading">
         WRITE NEW POST
       </div>
     </div>
@@ -96,28 +96,29 @@
       <div class="toolbar-sep"></div>
 
       <!-- Format -->
-      <button class="toolbar-btn" data-cmd="bold"          title="Bold"><b>B</b></button>
-      <button class="toolbar-btn" data-cmd="italic"        title="Italic"><i>I</i></button>
-      <button class="toolbar-btn" data-cmd="underline"     title="Underline"><u>U</u></button>
+      <button class="toolbar-btn" data-cmd="bold" title="Bold"><b>B</b></button>
+      <button class="toolbar-btn" data-cmd="italic" title="Italic"><i>I</i></button>
+      <button class="toolbar-btn" data-cmd="underline" title="Underline"><u>U</u></button>
       <button class="toolbar-btn" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
       <div class="toolbar-sep"></div>
 
       <!-- Lists -->
       <button class="toolbar-btn" data-cmd="insertUnorderedList" title="Bullet List">≡</button>
-      <button class="toolbar-btn" data-cmd="insertOrderedList"   title="Numbered List">⒈</button>
+      <button class="toolbar-btn" data-cmd="insertOrderedList" title="Numbered List">⒈</button>
       <div class="toolbar-sep"></div>
 
       <!-- Alignment -->
-      <button class="toolbar-btn" data-cmd="justifyLeft"   title="Align Left">⇤</button>
+      <button class="toolbar-btn" data-cmd="justifyLeft" title="Align Left">⇤</button>
       <button class="toolbar-btn" data-cmd="justifyCenter" title="Center">⇔</button>
-      <button class="toolbar-btn" data-cmd="justifyRight"  title="Align Right">⇥</button>
+      <button class="toolbar-btn" data-cmd="justifyRight" title="Align Right">⇥</button>
       <div class="toolbar-sep"></div>
 
       <!-- Special -->
-      <button class="toolbar-btn" onclick="insertLink()"      title="Insert Link">🔗</button>
+      <button class="toolbar-btn" onclick="insertLink()" title="Insert Link">🔗</button>
       <button class="toolbar-btn" data-cmd="insertHorizontalRule" title="Divider">—</button>
       <button class="toolbar-btn" onclick="insertCodeBlock()" title="Code Block">&lt;/&gt;</button>
-      <button class="toolbar-btn" data-cmd="blockquote" onclick="execCmd('formatBlock','blockquote')" title="Quote">❝</button>
+      <button class="toolbar-btn" data-cmd="blockquote" onclick="execCmd('formatBlock','blockquote')"
+        title="Quote">❝</button>
       <div class="toolbar-sep"></div>
 
       <!-- Undo/Redo -->
@@ -126,12 +127,9 @@
     </div>
 
     <!-- Content Editable Editor -->
-    <div
-      id="rich-editor"
-      class="rich-editor"
-      contenteditable="true"
-      data-placeholder="Start writing your post here... Use the toolbar above to format text, add headings, lists, code blocks, and more."
-    ></div>
+    <div id="rich-editor" class="rich-editor" contenteditable="true"
+      data-placeholder="Start writing your post here... Use the toolbar above to format text, add headings, lists, code blocks, and more.">
+    </div>
 
     <!-- Footer: word count -->
     <div class="editor-footer">
@@ -141,9 +139,11 @@
 
     <!-- My Posts Table -->
     <div style="margin-top:5rem">
-      <div style="font-family:'Orbitron',monospace;font-size:1rem;color:#fff;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem">
+      <div
+        style="font-family:'Orbitron',monospace;font-size:1rem;color:#fff;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem">
         MY POSTS
-        <span style="font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--text-dim)">// ALL DRAFTS & PUBLISHED</span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--text-dim)">// ALL DRAFTS &
+          PUBLISHED</span>
       </div>
       <table class="my-posts-table">
         <thead>
@@ -156,7 +156,10 @@
           </tr>
         </thead>
         <tbody id="my-posts-body">
-          <tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:2rem;font-family:'Share Tech Mono',monospace">LOADING...</td></tr>
+          <tr>
+            <td colspan="5" style="text-align:center;padding:2rem;font-family:'Share Tech Mono',monospace">
+              LOADING...</td>
+          </tr>
         </tbody>
       </table>
     </div>

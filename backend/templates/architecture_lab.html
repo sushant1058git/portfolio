@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Architecture Decision Lab | Sushant Sinha{% endblock %}
+{% block nav_architecture_lab %}active{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/architecture-lab.css' %}">
+<style>
+  .scenario-stack {
+    display: grid;
+    gap: .8rem
+  }
+
+  .component-inspector {
+    margin-top: 1.3rem;
+    padding: 1.4rem 1.7rem;
+    border: 1px solid var(--accent);
+    background: var(--bg2);
+    box-shadow: var(--glow)
+  }
+
+  .component-inspector h3 {
+    margin: .45rem 0 .9rem;
+    font: 700 1.1rem Orbitron, monospace
+  }
+
+  .component-inspector p {
+    margin: .45rem 0;
+    color: var(--text-dim);
+    line-height: 1.55
+  }
+</style>{% endblock %}
+{% block content %}
+<main class="architecture-lab" id="architecture-lab">
+  <section class="lab-hero" id="top">
+    <div class="lab-eyebrow"><span></span> LABS / 01 — SYSTEM DESIGN</div>
+    <div class="hero-grid">
+      <div>
+        <h1>Architecture<br><em>Decision Lab</em></h1>
+        <p class="hero-lede">Explore how I design systems, make trade-offs, and solve problems at scale.</p>
+        <p class="hero-copy">Real-world engineering problems, explored through architecture, constraints, failure
+          scenarios, and scalability.</p>
+        <div class="lab-actions"><button class="btn" data-action="scenario">EXPLORE A SCENARIO →</button></div>
+      </div>
+      <div class="hero-system" aria-label="Animated system architecture illustration">
+        <div class="system-node n-client">CLIENT</div><i class="wire w1"></i>
+        <div class="system-node n-api">API</div><i class="wire w2"></i>
+        <div class="system-node n-queue">EVENT STREAM</div><i class="wire w3"></i>
+        <div class="system-node n-workers">WORKERS</div><span class="signal s1"></span><span
+          class="signal s2"></span><span class="signal s3"></span>
+        <p>DESIGN · MEASURE · EVOLVE</p>
+      </div>
+    </div>
+  </section>
+  <section class="lab-purpose" aria-labelledby="lab-purpose-title">
+    <div><span class="section-kicker">WHAT THIS PAGE IS</span>
+      <h2 id="lab-purpose-title">A guided system-design walkthrough</h2>
+    </div>
+    <p>Follow one realistic notification problem from its constraints to a production-ready design. Every control
+      changes a simulated outcome: traffic exposes bottlenecks, component cards explain the trade-off, failure modes
+      test resilience, and the simulator shows how different requirements lead to different designs.</p>
+    <div class="purpose-steps"><span><b>01</b> Understand the problem</span><span><b>02</b> See what
+        breaks</span><span><b>03</b> Evolve the architecture</span></div>
+  </section>
+  <section class="lab-section scenario-section" id="scenarios">
+    <div class="section-head">
+      <div><span class="section-kicker">SCENARIO SELECTION</span>
+        <h2>Choose a system to reason about.</h2>
+      </div><span class="scenario-count">03 / MORE TO COME</span>
+    </div>
+    <div class="scenario-stack">
+      <article class="scenario-card selected" data-scenario="notification" tabindex="0">
+        <div class="scenario-num">01</div>
+        <div class="scenario-main"><span class="difficulty">SENIOR / SYSTEM DESIGN</span>
+          <h3>Notification System</h3>
+          <p>Process 10 million events per day with low latency and reliable multi-channel delivery.</p>
+        </div>
+        <div class="requirement-chips"><span>10M events/day</span><span>Retries + dedupe</span><span>Email · SMS ·
+            Push</span></div><button class="scenario-open" aria-label="Open Notification System scenario">→</button>
+      </article>
+      <article class="scenario-card" data-scenario="payments" tabindex="0">
+        <div class="scenario-num">02</div>
+        <div class="scenario-main"><span class="difficulty">SENIOR / RELIABILITY</span>
+          <h3>Payments Ledger</h3>
+          <p>Build a payment workflow that keeps financial state correct while integrating unreliable external gateways.
+          </p>
+        </div>
+        <div class="requirement-chips"><span>Strong consistency</span><span>Audit trail</span><span>Idempotency</span>
+        </div><button class="scenario-open" aria-label="Open Payments Ledger scenario">→</button>
+      </article>
+      <article class="scenario-card" data-scenario="media" tabindex="0">
+        <div class="scenario-num">03</div>
+        <div class="scenario-main"><span class="difficulty">SENIOR / PLATFORM</span>
+          <h3>Media Processing Pipeline</h3>
+          <p>Accept large uploads, process them asynchronously, and deliver globally without blocking users.</p>
+        </div>
+        <div class="requirement-chips"><span>Large uploads</span><span>Async jobs</span><span>Global delivery</span>
+        </div><button class="scenario-open" aria-label="Open Media Processing Pipeline scenario">→</button>
+      </article>
+    </div>
+  </section>
+  <section class="lab-section journey" id="journey">
+    <div class="section-head">
+      <div><span class="section-kicker">INTERACTIVE ARCHITECTURE JOURNEY</span>
+        <h2>Notification delivery, from first principles.</h2>
+      </div>
+      <div class="stage-nav" role="tablist" aria-label="Architecture stages"><button class="stage-tab active"
+          data-stage="requirements">01 <span>Requirements</span></button><button class="stage-tab"
+          data-stage="initial">02 <span>Start simple</span></button><button class="stage-tab" data-stage="bottleneck">03
+          <span>Find limits</span></button><button class="stage-tab" data-stage="evolved">04
+          <span>Evolve</span></button></div>
+    </div>
+    <aside class="lab-guide"><strong>How to use this lab</strong><span>1. Frame the requirements</span><span>2. Increase
+        traffic</span><span>3. Inspect a component</span><span>4. Break a dependency</span><span>5. Change the
+        constraints</span></aside>
+    <div class="journey-layout">
+      <div class="journey-copy" id="stage-copy"></div>
+      <div class="architecture-canvas">
+        <div class="canvas-label">LIVE ARCHITECTURE <span id="architecture-mode">FOUNDATION</span></div>
+        <div class="diagram" id="architecture-diagram"></div>
+        <div class="diagram-hint">Select a component to inspect its decision.</div>
+      </div>
+    </div>
+    <div class="traffic-control" id="traffic-control">
+      <div><span class="control-label">TRAFFIC</span><strong id="traffic-value">10K events/day</strong></div><input
+        type="range" min="0" max="3" value="0" step="1" aria-label="Traffic volume">
+      <div class="traffic-labels"><span>10K</span><span>100K</span><span>1M</span><span>10M</span></div>
+    </div>
+    <div class="metrics-panel">
+      <div class="simulation-tag">● SIMULATION</div>
+      <div><span>EVENTS / DAY</span><strong id="metric-events">10,000</strong></div>
+      <div><span>THROUGHPUT</span><strong id="metric-throughput">0.1 events/sec</strong></div>
+      <div><span>P95 LATENCY</span><strong id="metric-latency">82 ms</strong></div>
+      <div><span>ERROR RATE</span><strong id="metric-errors">0.01%</strong></div>
+      <div><span>QUEUE LAG</span><strong id="metric-lag">—</strong></div>
+      <div><span>DATABASE LOAD</span><strong id="metric-db">12%</strong></div>
+    </div>
+  </section>
+  <section class="lab-section decisions-section">
+    <div class="section-head">
+      <div><span class="section-kicker">DECISIONS, NOT DOGMA</span>
+        <h2>Every component earns its place.</h2>
+      </div>
+    </div>
+    <div class="decision-grid" id="decision-grid"></div>
+  </section>
+  <section class="lab-section cache-section">
+    <div class="section-head">
+      <div><span class="section-kicker">CACHING STRATEGY</span>
+        <h2>Cache deliberately.</h2>
+      </div><button class="toggle" id="cache-toggle" aria-pressed="true">CACHE <b>ON</b></button>
+    </div>
+    <div class="cache-grid">
+      <div class="cache-flow">
+        <div>REQUEST</div><i></i>
+        <div class="redis">REDIS CACHE</div><i class="miss">CACHE MISS</i>
+        <div>POSTGRESQL</div><i></i>
+        <div class="redis">REDIS</div>
+      </div>
+      <div class="cache-impact">
+        <p id="cache-impact">Redis absorbs repeat preference and template reads, keeping Postgres focused on durable
+          delivery state.</p>
+        <dl>
+          <div>
+            <dt>DATABASE REQUESTS</dt>
+            <dd id="cache-requests">36%</dd>
+          </div>
+          <div>
+            <dt>RESPONSE LATENCY</dt>
+            <dd id="cache-latency">48 ms</dd>
+          </div>
+          <div>
+            <dt>THROUGHPUT HEADROOM</dt>
+            <dd id="cache-headroom">2.8×</dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+    <div class="cache-notes">
+      <p><strong>Cache:</strong> templates, preferences, rate-limit counters.</p>
+      <p><strong>Do not cache:</strong> delivery status as the source of truth.</p>
+      <p><strong>If Redis fails:</strong> bypass to Postgres; slower, but available.</p>
+    </div>
+  </section>
+  <section class="lab-section failure-section">
+    <div class="section-head">
+      <div><span class="section-kicker">RESILIENCE ENGINEERING</span>
+        <h2>Break the system.</h2>
+      </div>
+    </div>
+    <div class="failure-layout">
+      <div class="failure-controls" id="failure-controls"></div>
+      <article class="failure-result" id="failure-result"><span class="impact-label">SELECT A FAILURE MODE</span>
+        <h3>Failure is a design input.</h3>
+        <p>Choose a component to see the user impact, containment strategy, and recovery path.</p>
+      </article>
+    </div>
+  </section>
+  <section class="lab-section simulator-section">
+    <div class="section-head">
+      <div><span class="section-kicker">WHAT WOULD YOU CHANGE?</span>
+        <h2>Constraint-driven architecture.</h2>
+      </div>
+    </div>
+    <div class="simulator">
+      <div class="sim-controls"><label>TRAFFIC <input id="sim-traffic" type="range" min="0" max="3" value="2"><output>1M
+            events/day</output></label><label>LATENCY REQUIREMENT <input id="sim-latency" type="range" min="0" max="3"
+            value="2"><output>100 ms</output></label><label>AVAILABILITY <input id="sim-availability" type="range"
+            min="0" max="3" value="2"><output>99.9%</output></label><label>BUDGET <input id="sim-budget" type="range"
+            min="0" max="3" value="2"><output>$$$</output></label></div>
+      <div class="recommendation" id="recommendation"></div>
+    </div>
+  </section>
+  <section class="lab-section adr-section">
+    <div class="section-head">
+      <div><span class="section-kicker">ARCHITECTURE DECISION RECORD</span>
+        <h2>Decision log.</h2>
+      </div>
+    </div>
+    <div class="adr-list" id="adr-list"></div>
+  </section>
+  <section class="lab-section principles"><span class="section-kicker">ENGINEERING PRINCIPLES</span>
+    <h2>The system is a set of trade-offs.</h2>
+    <div class="principle-list"><span>Start simple</span><span>Measure before optimizing</span><span>Design for
+        failure</span><span>Prefer appropriate complexity</span><span>Make systems observable</span><span>Avoid
+        premature microservices</span></div>
+  </section>
+  <section class="final-lab"><span class="section-kicker">WHAT I WOULD ACTUALLY BUILD</span>
+    <h2>A resilient, observable delivery pipeline.</h2>
+    <pre>Load Balancer → API → Kafka → Channel Workers → Providers | Redis + PostgreSQL | Retry / DLQ</pre>
+    <ol>
+      <li>Asynchronous event processing</li>
+      <li>PostgreSQL for durable application data</li>
+      <li>Redis for selective caching</li>
+      <li>Kafka, scalable workers, and a retry + dead-letter strategy</li>
+    </ol>
+    <p>The important part isn't choosing the “best” technology. It's understanding why a technology belongs in the
+      system.</p>
+  </section>
+</main>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/architecture-lab.js' %}"></script>{% endblock %}

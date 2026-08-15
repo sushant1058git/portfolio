@@ -451,6 +451,8 @@
         <div class="pg-actions">
             <span class="pg-status loading" id="pg-status">LOADING PYTHON...</span>
             <span class="pg-shortcut"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to run</span>
+            <button class="pg-clear-btn" onclick="saveSnippet()" title="Save code in this browser">SAVE</button>
+            <button class="pg-clear-btn" onclick="downloadSnippet()" title="Download main.py">DOWNLOAD</button>
             <button class="pg-clear-btn" onclick="clearOutput()">CLEAR</button>
             <button class="pg-run-btn" id="pg-run-btn" onclick="runCode()" disabled>
                 ▶ RUN
@@ -510,6 +512,7 @@
     let editor = null;
     let pyodide = null;
     let isRunning = false;
+    const PLAYGROUND_STORAGE_KEY = 'portfolio-playground-code';
 
     /* ── Code examples ───────────────────────── */
     const EXAMPLES = [
@@ -885,16 +888,69 @@ send_signal("post_save", instance=posts[0])
         clearOutput();
     }
 
+    function saveSnippet() {
+        if (!editor) return;
+        localStorage.setItem(PLAYGROUND_STORAGE_KEY, editor.getValue());
+        setStatus('SAVED LOCALLY', 'ready');
+        setTimeout(() => setStatus('READY', 'ready'), 1400);
+    }
+
+    function downloadSnippet() {
+        if (!editor) return;
+        const blob = new Blob([editor.getValue()], { type: 'text/x-python;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'main.py';
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
     /* ── Init Monaco ─────────────────────────── */
+    function syncEditorTheme() {
+        if (!editor || !window.monaco) return;
+        const theme = document.documentElement.classList.contains('light-theme')
+            ? 'portfolio-light'
+            : 'portfolio-dark';
+        monaco.editor.setTheme(theme);
+    }
+
     function initMonaco() {
         return new Promise((resolve) => {
             require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' } });
             require(['vs/editor/editor.main'], function () {
 
-                // Custom dark theme matching portfolio aesthetic
+                // Keep the code editor light independently of the site preference.
+                monaco.editor.defineTheme('portfolio-light', {
+                    base: 'vs',
+                    inherit: false,
+                    rules: [
+                        { token: 'comment', foreground: '6b7280', fontStyle: 'italic' },
+                        { token: 'keyword', foreground: '7c3aed' },
+                        { token: 'string', foreground: '0369a1' },
+                        { token: 'number', foreground: 'b45309' },
+                        { token: 'type', foreground: '92400e' },
+                        { token: 'function', foreground: '2563eb' },
+                        { token: 'variable', foreground: '111827' },
+                        { token: 'delimiter', foreground: '64748b' },
+                    ],
+                    colors: {
+                        'editor.background': '#ffffff',
+                        'editor.foreground': '#111827',
+                        'editor.lineHighlightBackground': '#f8fafc',
+                        'editor.selectionBackground': '#bfdbfe',
+                        'editorCursor.foreground': '#0052cc',
+                        'editorLineNumber.foreground': '#94a3b8',
+                        'editorLineNumber.activeForeground': '#334155',
+                        'editorIndentGuide.background': '#e2e8f0',
+                        'editorIndentGuide.activeBackground': '#cbd5e1',
+                        'scrollbarSlider.background': '#cbd5e1',
+                        'scrollbarSlider.hoverBackground': '#94a3b8',
+                    }
+                });
+
                 monaco.editor.defineTheme('portfolio-dark', {
                     base: 'vs-dark',
-                    inherit: true,
+                    inherit: false,
                     rules: [
                         { token: 'comment', foreground: '6e7681', fontStyle: 'italic' },
                         { token: 'keyword', foreground: 'ff7b72' },
@@ -921,9 +977,11 @@ send_signal("post_save", instance=posts[0])
                 });
 
                 editor = monaco.editor.create(document.getElementById('monaco-editor'), {
-                    value: EXAMPLES[0].code,
+                    value: localStorage.getItem(PLAYGROUND_STORAGE_KEY) || EXAMPLES[0].code,
                     language: 'python',
-                    theme: 'portfolio-dark',
+                    theme: document.documentElement.classList.contains('light-theme')
+                        ? 'portfolio-light'
+                        : 'portfolio-dark',
                     fontSize: 14,
                     fontFamily: "'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Share Tech Mono', monospace",
                     fontLigatures: true,
@@ -946,13 +1004,12 @@ send_signal("post_save", instance=posts[0])
                     cursorBlinking: 'smooth',
                     cursorSmoothCaretAnimation: 'on',
                     padding: { top: 12, bottom: 12 },
+                    'editor.defaultColorDecorators': false,
                 });
 
-                // Ctrl+Enter to run
-                editor.addCommand(
-                    monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
-                    () => runCode()
-                );
+                syncEditorTheme();
+                editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => runCode());
+                editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => saveSnippet());
 
                 // Update line/col in status
                 editor.onDidChangeCursorPosition(e => {
@@ -1156,6 +1213,11 @@ from itertools import chain, product, permutations, combinations
         loadExamples();
         await initMonaco();
         await loadPyodide_();
+
+        new MutationObserver(syncEditorTheme).observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class', 'data-theme'],
+        });
     })();
 </script>
 {% endblock %}

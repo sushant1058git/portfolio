@@ -151,6 +151,13 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeModal();
 });
 
+// ---- Login next page tracking ----
+window._loginNextUrl = null;
+
+function openLoginModalWithNext() {
+  openLoginModal();
+}
+
 // ---- Login submit ----
 async function submitLogin(e) {
   e.preventDefault();
@@ -180,6 +187,17 @@ async function submitLogin(e) {
       showToast("✓ Welcome back, " + data.user.username + "!");
       // Refresh page content if needed
       if (typeof onAuthChange === "function") onAuthChange(data.user);
+
+      // Redirect to next page if specified
+      if (
+        window._loginNextUrl &&
+        window._loginNextUrl !== "null" &&
+        window._loginNextUrl.trim() !== ""
+      ) {
+        setTimeout(() => {
+          window.location.href = window._loginNextUrl;
+        }, 500);
+      }
     } else {
       if (errEl) {
         errEl.textContent = data.error || "Login failed.";
@@ -272,12 +290,12 @@ document.addEventListener("keydown", function (e) {
 
   console.log("🎨 Theme toggle init - button:", toggleBtn);
 
-  // Get stored preference or default to dark
+  // Get stored preference or default to the portfolio's accessible light theme.
   function getThemePreference() {
     const stored = localStorage.getItem(STORAGE_KEY);
     console.log("📦 Stored theme:", stored);
     if (stored) return stored;
-    return "dark"; // Default to dark
+    return "light";
   }
 
   // Apply theme to DOM
@@ -315,7 +333,7 @@ document.addEventListener("keydown", function (e) {
       e.preventDefault();
       e.stopPropagation();
 
-      const current = localStorage.getItem(STORAGE_KEY) || "dark";
+      const current = localStorage.getItem(STORAGE_KEY) || "light";
       const newTheme = current === "dark" ? "light" : "dark";
       console.log(`🔄 Toggling from ${current} to ${newTheme}`);
 

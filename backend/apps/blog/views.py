@@ -2,9 +2,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.utils.text import slugify
 from django.utils import timezone
+from django.http import HttpResponseRedirect
+from urllib.parse import urlencode
 from .models import Category, Post, Comment
 from .serializers import (
     CategorySerializer, PostListSerializer,
@@ -14,6 +16,31 @@ from .serializers import (
 
 def is_staff(request):
     return request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)
+
+
+def blog_editor_view(request):
+    """
+    View for the blog editor page.
+    Only authenticated staff/superuser can access; others see access denied page.
+    Passes the current URL as 'next' parameter for redirect after login.
+    """
+    if is_staff(request):
+        return render(request, 'blog/editor.html')
+
+    # Redirect to access denied page with next parameter
+    next_url = request.get_full_path()
+    return HttpResponseRedirect(f"/access-denied/?{urlencode({'next': next_url})}")
+
+
+def access_denied_view(request):
+    """
+    View for access denied page.
+    Handles the next parameter from the query string.
+    """
+    context = {
+        'next': request.GET.get('next', '')
+    }
+    return render(request, 'access_denied.html', context, status=401)
 
 
 class PostListView(APIView):

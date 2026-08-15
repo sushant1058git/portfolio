@@ -30,8 +30,13 @@ function renderPost(p) {
   // Hero
   const hero = document.getElementById("post-hero");
   if (hero) {
+    hero.style.backgroundImage = p.cover_image
+      ? `linear-gradient(90deg, var(--bg) 0%, rgba(5, 10, 15, 0.78) 52%, rgba(5, 10, 15, 0.36) 100%), url("${p.cover_image}")`
+      : "";
+    hero.style.backgroundSize = p.cover_image ? "cover" : "";
+    hero.style.backgroundPosition = p.cover_image ? "center" : "";
     hero.innerHTML = `
-      <div class="post-hero-bg"></div>
+      <div class="post-hero-bg" ${p.cover_image ? 'style="background:transparent"' : ''}></div>
       <div style="position:relative;z-index:1;max-width:900px">
         <div class="post-breadcrumb">
           <a href="/">HOME</a> /

@@ -320,12 +320,12 @@ async function loadMyPosts() {
   const tbody = document.getElementById("my-posts-body");
   if (!tbody) return;
 
-  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:2rem;font-family:'Share Tech Mono',monospace;letter-spacing:.1em">LOADING...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="5" class="blog-list-title" style="text-align:center;padding:2rem;font-family:'Share Tech Mono',monospace;letter-spacing:.1em">LOADING...</td></tr>`;
 
   try {
     const res = await fetch("/api/blogs/staff/");
     if (!res.ok) {
-      tbody.innerHTML = `<tr><td colspan="5" style="color:var(--accent3);text-align:center;padding:2rem;font-family:'Share Tech Mono',monospace">Auth error — please re-login.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="blog-list-title" style="color:var(--accent3);text-align:center;padding:2rem;font-family:'Share Tech Mono',monospace">Auth error — please re-login.</td></tr>`;
       return;
     }
 
@@ -334,7 +334,7 @@ async function loadMyPosts() {
     const posts = Array.isArray(raw) ? raw : raw.results || [];
 
     if (!posts.length) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:2.5rem;font-family:'Share Tech Mono',monospace;letter-spacing:.1em">NO POSTS YET — WRITE YOUR FIRST ONE ABOVE ↑</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="blog-list-title" style="text-align:center;padding:2.5rem;font-family:'Share Tech Mono',monospace;letter-spacing:.1em">NO POSTS YET — WRITE YOUR FIRST ONE ABOVE ↑</td></tr>`;
       return;
     }
 
@@ -350,8 +350,8 @@ async function loadMyPosts() {
 
         return `
         <tr>
-          <td style="color:#fff;font-family:'Orbitron',monospace;font-size:.82rem;max-width:260px">
-            <a href="/blog/${slug}/" target="_blank" style="color:#fff;text-decoration:none;line-height:1.4;display:block"
+          <td  style="font-family:'Orbitron',monospace;font-size:.82rem;max-width:260px">
+            <a href="/blog/${slug}/" target="_blank"  class="blog-list-title" style="text-decoration:none;line-height:1.4;display:block"
                title="${title}">${title.length > 50 ? title.substring(0, 50) + "…" : title}</a>
           </td>
           <td style="color:${catColor};font-family:'Share Tech Mono',monospace;font-size:.8rem">${catName}</td>

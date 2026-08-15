@@ -41,7 +41,7 @@ class Command(BaseCommand):
     def _seed_skills(self):
         from apps.portfolio.models import SkillCategory, Skill
         skill_data = [
-            ('Backend Development', '⚙️', 0, ['Python', 'Django', 'FastAPI', 'DRF', 'REST APIs', 'JWT Auth', 'Swagger/OpenAPI', 'SQL', 'NoSQL']),
+            ('Backend Development', '⚙️', 0, ['Python', 'Django', 'FastAPI', 'DRF', 'REST APIs', 'JWT Auth', 'SQL', 'NoSQL']),
             ('Frontend', '🎨', 1, ['React', 'JavaScript', 'HTML5', 'CSS3', 'Chart.js', 'Go.js']),
             ('Cloud & DevOps', '☁️', 2, ['AWS', 'EC2', 'S3', 'Docker', 'Kubernetes', 'GitLab CI/CD', 'Kafka']),
             ('Data & Search', '🗄️', 3, ['MongoDB', 'Elasticsearch', 'PostgreSQL', 'Pandas', 'Celery', 'R/Shiny', 'sci-spaCy']),
@@ -69,7 +69,7 @@ class Command(BaseCommand):
             exp1_points = [
                 'Led a team of 4 developers (including 3 juniors), managing requirements, architecture, and on-time delivery.',
                 'Owned end-to-end backend architecture — HLD/LLD, development, and deployment of scalable Django REST APIs.',
-                'Implemented JWT authentication, API versioning, and Swagger/OpenAPI documentation.',
+                'Implemented JWT authentication, API versioning, and clear endpoint documentation.',
                 'Automated build, test & deployment pipelines with GitLab CI/CD + Docker — reduced deployment time by 30%.',
                 'Integrated Kafka for real-time data streaming to enhance dashboard responsiveness and data accuracy.',
                 'Utilized sci-spaCy NLP model to develop advanced text processing and analysis features.',
@@ -156,7 +156,7 @@ class Command(BaseCommand):
             {
                 'title': 'Designing Scalable REST APIs with Django REST Framework',
                 'category': cats['Backend Engineering'],
-                'excerpt': 'A deep dive into API versioning strategies, JWT authentication patterns, and Swagger documentation practices that keep your APIs maintainable as they grow.',
+                'excerpt': 'A deep dive into API versioning strategies, JWT authentication patterns, and documentation practices that keep APIs maintainable as they grow.',
                 'content': '''# Designing Scalable REST APIs with Django REST Framework
 
 Building APIs that scale isn't just about performance — it's about **maintainability, security, and developer experience**.
@@ -184,9 +184,9 @@ REST_FRAMEWORK = {
 }
 ```
 
-## Swagger/OpenAPI Docs
+## API Documentation
 
-Use `drf-spectacular` to auto-generate docs your frontend team will love.
+Keep endpoint contracts, examples, and error responses close to the APIs they describe so that clients can integrate confidently.
 
 ## Key Lessons
 
