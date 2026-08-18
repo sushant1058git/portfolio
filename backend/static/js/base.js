@@ -152,9 +152,17 @@ document.addEventListener("keydown", (e) => {
 });
 
 // ---- Login next page tracking ----
-window._loginNextUrl = null;
+function getLoginNextUrlFromSearch() {
+  const params = new URLSearchParams(window.location.search);
+  const next = params.get("next");
+  return next && next !== "null" ? decodeURIComponent(next) : null;
+}
+
+window._loginNextUrl = window._loginNextUrl || getLoginNextUrlFromSearch();
 
 function openLoginModalWithNext() {
+  const next = getLoginNextUrlFromSearch();
+  if (next) window._loginNextUrl = next;
   openLoginModal();
 }
 
@@ -185,18 +193,11 @@ async function submitLogin(e) {
       setLoggedIn(data.user);
       closeModal();
       showToast("✓ Welcome back, " + data.user.username + "!");
-      // Refresh page content if needed
       if (typeof onAuthChange === "function") onAuthChange(data.user);
 
-      // Redirect to next page if specified
-      if (
-        window._loginNextUrl &&
-        window._loginNextUrl !== "null" &&
-        window._loginNextUrl.trim() !== ""
-      ) {
-        setTimeout(() => {
-          window.location.href = window._loginNextUrl;
-        }, 500);
+      const nextUrl = (window._loginNextUrl || "").trim();
+      if (nextUrl && nextUrl !== "null") {
+        window.location.href = nextUrl;
       }
     } else {
       if (errEl) {
@@ -343,5 +344,110 @@ document.addEventListener("keydown", function (e) {
     });
   } else {
     console.warn("⚠️ Theme toggle button not found!");
+  }
+})();
+
+/* ============================================
+   BREADCRUMBS — Auto-generated from the URL path
+   ============================================ */
+
+(function initBreadcrumbs() {
+  const nav = document.querySelector("nav");
+  if (!nav) return;
+
+  const segments = window.location.pathname.split("/").filter(Boolean);
+
+  // Pages that exist as real routes get a clickable crumb; anything else
+  // (an intermediate path segment with no page of its own, e.g. "labs")
+  // renders as plain text.
+  const KNOWN_ROUTES = new Set([
+    "/",
+    "/blog/",
+    "/contact/",
+    "/playground/",
+    "/status/",
+    "/labs/architecture/",
+  ]);
+
+  const LABELS = {
+    blog: "Blog",
+    labs: "Labs",
+    architecture: "Architecture Lab",
+    playground: "Playground",
+    status: "Status",
+    contact: "Contact",
+    create: "New Post",
+    "access-denied": "Access Denied",
+  };
+
+  function titleize(segment) {
+    return segment
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  function pageLabel() {
+    return (document.title || "").split("|")[0].trim();
+  }
+
+  function buildCrumbs() {
+    const crumbs = [{ label: "Home", href: "/" }];
+    let acc = "";
+    segments.forEach((seg, i) => {
+      acc += "/" + seg + "/";
+      const isLast = i === segments.length - 1;
+      const label =
+        LABELS[seg] || (isLast ? pageLabel() || titleize(seg) : titleize(seg));
+      crumbs.push({ label, href: acc });
+    });
+    return crumbs;
+  }
+
+  // The nav is position:fixed (removed from normal flow), so a normal-flow
+  // breadcrumb bar placed right after it would render underneath it. Push
+  // the bar down by the nav's own height so it clears the nav and then
+  // occupies its own space, pushing the rest of the page content down too.
+  function applyNavOffset(bar) {
+    bar.style.marginTop = nav.offsetHeight + "px";
+  }
+
+  function render() {
+    const existing = document.querySelector(".breadcrumbs");
+    if (!segments.length) {
+      if (existing) existing.remove();
+      return;
+    }
+
+    const crumbs = buildCrumbs();
+    const bar = existing || document.createElement("div");
+    bar.className = "breadcrumbs";
+    bar.innerHTML = crumbs
+      .map((c, i) => {
+        if (i === crumbs.length - 1) {
+          return `<span class="breadcrumb-current">${c.label}</span>`;
+        }
+        const inner = KNOWN_ROUTES.has(c.href)
+          ? `<a href="${c.href}">${c.label}</a>`
+          : `<span class="breadcrumb-mid">${c.label}</span>`;
+        return `${inner}<span class="breadcrumb-sep">/</span>`;
+      })
+      .join("");
+
+    if (!existing) nav.insertAdjacentElement("afterend", bar);
+    applyNavOffset(bar);
+  }
+
+  render();
+
+  window.addEventListener("resize", () => {
+    const bar = document.querySelector(".breadcrumbs");
+    if (bar) applyNavOffset(bar);
+  });
+
+  // Some pages (e.g. a blog post) set document.title asynchronously after
+  // fetching their data — re-render so the trailing crumb picks it up.
+  const titleEl = document.querySelector("head > title");
+  if (titleEl) {
+    new MutationObserver(render).observe(titleEl, { childList: true });
   }
 })();

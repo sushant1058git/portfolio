@@ -115,30 +115,11 @@
 {% block content %}
 <!-- Initialize login redirect tracking from URL query string -->
 <script>
-    console.log('[Access Denied] Page loaded');
-    console.log('[Access Denied] Current URL:', window.location.href);
-    console.log('[Access Denied] Current search params:', window.location.search);
-
-    // Extract next URL from query parameter
     const urlParams = new URLSearchParams(window.location.search);
-    window._loginNextUrl = urlParams.get('next');
-    console.log('[Access Denied] Next URL from URLSearchParams:', window._loginNextUrl);
-
-    // Fallback: also try manual parsing
-    const nextMatch = window.location.search.match(/[?&]next=([^&]*)/);
-    if (nextMatch && !window._loginNextUrl) {
-        window._loginNextUrl = decodeURIComponent(nextMatch[1]);
-        console.log('[Access Denied] Next URL from regex fallback:', window._loginNextUrl);
+    const nextFromUrl = urlParams.get('next');
+    if (nextFromUrl && nextFromUrl !== 'null') {
+        window._loginNextUrl = decodeURIComponent(nextFromUrl);
     }
-
-    console.log('[Access Denied] Final _loginNextUrl:', window._loginNextUrl);
-
-    // Make sure functions are available
-    window.addEventListener('load', function () {
-        console.log('[Access Denied] Page fully loaded');
-        console.log('[Access Denied] openLoginModal available:', typeof window.openLoginModal === 'function');
-        console.log('[Access Denied] login-modal element:', document.getElementById('login-modal') ? 'found' : 'NOT found');
-    });
 </script>
 
 <div class="access-denied-container">
@@ -155,7 +136,7 @@
         </p>
 
         <div class="access-denied-actions">
-            <button type="button" class="btn btn-danger" onclick="openLoginModal()">LOGIN →</button>
+            <button type="button" class="btn btn-danger" onclick="openLoginModalWithNext()">LOGIN →</button>
             <a href="/blog/" class="btn">BACK TO BLOG</a>
             <a href="/" class="btn">HOME</a>
         </div>

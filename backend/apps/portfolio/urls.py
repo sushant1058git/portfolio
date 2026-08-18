@@ -1,7 +1,8 @@
 from django.urls import path
 from .views import (
     ProfileView, SkillsView, ExperienceView,
-    EducationView, CertificationView, PortfolioSummaryView, ProjectListView, CurrentlyWorkingView
+    EducationView, CertificationView, PortfolioSummaryView, ProjectListView, CurrentlyWorkingView,
+    ScenarioListView, ScenarioDetailView, LabSharedView
 )
 from .auth_views import LoginView, LogoutView, AuthCheckView
 
@@ -18,4 +19,7 @@ urlpatterns = [
     path('auth/check/', AuthCheckView.as_view(), name='api-auth-check'),
     path('projects/', ProjectListView.as_view(), name='api-projects'),
     path('currently-working/', CurrentlyWorkingView.as_view(), name='api-currently-working'),
+    path('scenarios/', ScenarioListView.as_view(), name='api-scenarios'),
+    path('scenarios/<str:key>/', ScenarioDetailView.as_view(), name='api-scenario-detail'),
+    path('lab-shared/', LabSharedView.as_view(), name='api-lab-shared'),
 ]

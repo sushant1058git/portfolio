@@ -1,6 +1,10 @@
 from rest_framework import serializers
 from .models import Profile, SkillCategory, Skill, Experience, ExperiencePoint, Education, Certification
-from .models import Project, CurrentlyWorking
+from .models import Project, CurrentlyWorking, Scenario
+from .models import (
+    Stage, StagePoint, StageNode, Component, Decision, FailureMode,
+    ArchitectureDecisionRecord, TrafficMetric, SimulatorPlan, SimulatorBottleneck,
+)
 
 
 class SkillSerializer(serializers.ModelSerializer):
@@ -84,3 +88,81 @@ class CurrentlyWorkingSerializer(serializers.ModelSerializer):
     class Meta:
         model = CurrentlyWorking
         fields = ['title', 'description', 'type', 'tech_tags', 'link', 'progress', 'updated_at']
+
+
+class ScenarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Scenario
+        fields = ['key', 'number', 'difficulty', 'title', 'description', 'requirement_chips']
+
+
+class StageSerializer(serializers.ModelSerializer):
+    points = serializers.SerializerMethodField()
+    nodes = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Stage
+        fields = ['key', 'mode', 'title', 'text', 'points', 'nodes']
+
+    def get_points(self, obj):
+        return [p.text for p in obj.points.all()]
+
+    def get_nodes(self, obj):
+        return [n.name for n in obj.nodes.all()]
+
+
+class DecisionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Decision
+        fields = ['title', 'problem', 'decision', 'detail', 'alternatives']
+
+
+class FailureModeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FailureMode
+        fields = ['name', 'impact', 'response', 'recovery']
+
+
+class ArchitectureDecisionRecordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArchitectureDecisionRecord
+        fields = ['identifier', 'title', 'detail']
+
+
+class SimulatorPlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SimulatorPlan
+        fields = ['tier', 'name', 'diagram']
+
+
+class ScenarioDetailSerializer(serializers.ModelSerializer):
+    stages = serializers.SerializerMethodField()
+    simulator_plans = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Scenario
+        fields = ['key', 'title', 'journey_title', 'stages', 'simulator_plans']
+
+    def get_stages(self, obj):
+        return {s.key: StageSerializer(s).data for s in obj.stages.all()}
+
+    def get_simulator_plans(self, obj):
+        return {p.tier: SimulatorPlanSerializer(p).data for p in obj.simulator_plans.all()}
+
+
+class ComponentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Component
+        fields = ['name', 'display_name', 'problem', 'decision', 'tradeoff', 'alternatives']
+
+
+class TrafficMetricSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TrafficMetric
+        fields = ['level', 'traffic_label', 'events', 'throughput', 'latency', 'error_rate', 'queue_lag', 'db_load']
+
+
+class SimulatorBottleneckSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SimulatorBottleneck
+        fields = ['tier', 'text']

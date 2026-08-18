@@ -18,6 +18,9 @@ class Command(BaseCommand):
         self._seed_education()
         self._seed_certifications()
         self._seed_blog()
+        self._seed_scenarios()
+        self._seed_lab_details()
+        self._seed_projects()
         self.stdout.write(self.style.SUCCESS('✅ Database seeded successfully!'))
 
     def _seed_profile(self):
@@ -411,3 +414,282 @@ Start with 3 replicas minimum in production. Rolling updates are your friend.
                 published_at=timezone.now(),
             )
         self.stdout.write('  ✓ Blog posts created')
+
+    def _seed_scenarios(self):
+        from apps.portfolio.models import Scenario
+        scenario_data = [
+            ('notification', '01', 'SENIOR / SYSTEM DESIGN', 'Notification System',
+             'Process 10 million events per day with low latency and reliable multi-channel delivery.',
+             ['10M events/day', 'Retries + dedupe', 'Email · SMS · Push'],
+             'Notification delivery, from first principles.', 0),
+            ('payments', '02', 'SENIOR / RELIABILITY', 'Payments Ledger',
+             'Build a payment workflow that keeps financial state correct while integrating unreliable external gateways.',
+             ['Strong consistency', 'Audit trail', 'Idempotency'],
+             'Payment correctness, from first principles.', 1),
+            ('media', '03', 'SENIOR / PLATFORM', 'Media Processing Pipeline',
+             'Accept large uploads, process them asynchronously, and deliver globally without blocking users.',
+             ['Large uploads', 'Async jobs', 'Global delivery'],
+             'Media processing, from first principles.', 2),
+        ]
+        for key, number, difficulty, title, description, chips, journey_title, order in scenario_data:
+            Scenario.objects.update_or_create(
+                key=key,
+                defaults={
+                    'number': number, 'difficulty': difficulty, 'title': title,
+                    'description': description, 'requirement_chips': chips,
+                    'journey_title': journey_title, 'order': order,
+                },
+            )
+        self.stdout.write('  ✓ Scenarios created/updated')
+
+    def _seed_lab_details(self):
+        from apps.portfolio.models import (
+            Scenario, Stage, StagePoint, StageNode, Component, Decision, FailureMode,
+            ArchitectureDecisionRecord, TrafficMetric, SimulatorPlan, SimulatorBottleneck,
+        )
+
+        stages_by_scenario = {
+            'notification': [
+                ('requirements', 'FOUNDATION', '01 — Frame the constraints',
+                 'Before selecting technology, make the shape of the problem explicit.',
+                 ['10M events/day ≈ 116 events/sec average; bursts matter more than averages.',
+                  'P95 delivery latency under 500 ms; delivery is eventually consistent.',
+                  '99.9% availability, durable delivery intent, and bounded operational spend.'],
+                 ['CLIENT', 'API', 'DATABASE', 'PROVIDER']),
+                ('initial', 'SIMPLE PATH', '02 — Start with one deployable',
+                 'A synchronous service is the right first architecture when volume and failure modes are manageable.',
+                 ['Easy to build and deploy.', 'Low operational complexity.',
+                  'The API is coupled to provider latency and availability.'],
+                 ['CLIENT', 'API', 'APPLICATION', 'POSTGRESQL', 'PROVIDER']),
+                ('bottleneck', 'LOAD TEST', '03 — Find the limit',
+                 'At sustained volume, the request path becomes the queue. Slow providers hold connections, retries amplify load, and the database becomes hot.',
+                 ['API latency climbs with provider latency.', 'Connection pools exhaust during retry storms.',
+                  'Synchronous processing cannot absorb bursts safely.'],
+                 ['CLIENT', 'LOAD BALANCER', 'API', 'APPLICATION', 'POSTGRESQL', 'PROVIDER']),
+                ('evolved', 'DURABLE PIPELINE', '04 — Decouple the critical path',
+                 'Keep accepting requests quickly, then let independent channel workers deliver from a durable stream.',
+                 ['Kafka buffers bursts and enables independent scaling.', 'Idempotency keys make at-least-once delivery safe.',
+                  'Retry queues and a DLQ prevent poisoned events from blocking healthy work.'],
+                 ['CLIENT', 'LOAD BALANCER', 'API', 'KAFKA', 'EMAIL WORKER', 'SMS WORKER', 'PUSH WORKER',
+                  'REDIS', 'POSTGRESQL', 'DLQ', 'PROVIDERS']),
+            ],
+            'payments': [
+                ('requirements', 'MONEY MOVEMENT', '01 — Protect correctness first',
+                 'A payment system is defined by durable state, idempotency, and a full audit trail — not request throughput alone.',
+                 ['Never charge twice for the same client intent.', 'Record every state transition durably.',
+                  'External gateway success can arrive late or be ambiguous.'],
+                 ['CLIENT', 'PAYMENTS API', 'POSTGRESQL', 'GATEWAY']),
+                ('initial', 'SIMPLE LEDGER', '02 — Start with a transactional core',
+                 'One payment service and PostgreSQL give a clear source of truth before integrations become complex.',
+                 ['A transaction records payment intent and ledger state.', 'The gateway call is isolated behind one service.',
+                  'A timeout must not be interpreted as a failed charge.'],
+                 ['CLIENT', 'PAYMENTS API', 'PAYMENT SERVICE', 'POSTGRESQL', 'GATEWAY']),
+                ('bottleneck', 'RECONCILIATION', '03 — Make uncertainty explicit',
+                 'Gateway retries, webhooks, and slow responses create ambiguous outcomes. Correctness needs a state machine, not blind retries.',
+                 ['Idempotency keys bind client intent to one payment.', 'Webhook events are verified and reconciled.',
+                  'The ledger remains the audit source of truth.'],
+                 ['CLIENT', 'LOAD BALANCER', 'PAYMENTS API', 'POSTGRESQL', 'GATEWAY', 'WEBHOOKS']),
+                ('evolved', 'RELIABLE LEDGER', '04 — Separate the ledger from side effects',
+                 'Persist the intent, emit an outbox event, and let workers handle receipts, reconciliation, and retries safely.',
+                 ['PostgreSQL transaction + outbox prevents lost events.', 'Workers process gateway callbacks idempotently.',
+                  'Monitoring watches reconciliation lag and payment state drift.'],
+                 ['CLIENT', 'LOAD BALANCER', 'PAYMENTS API', 'POSTGRESQL', 'OUTBOX', 'KAFKA', 'RECONCILER',
+                  'GATEWAY', 'AUDIT LOG']),
+            ],
+            'media': [
+                ('requirements', 'UPLOAD PIPELINE', '01 — Keep uploads off the request server',
+                 'Large files and slow encoding should never occupy web workers or block a user request.',
+                 ['Uploads can be gigabytes and resumable.', 'Processing is CPU intensive and asynchronous.',
+                  'Published media needs low-latency global delivery.'],
+                 ['CLIENT', 'UPLOAD API', 'OBJECT STORAGE', 'CDN']),
+                ('initial', 'DIRECT UPLOAD', '02 — Start with direct-to-storage uploads',
+                 'The API issues signed upload URLs. The browser transfers directly to object storage.',
+                 ['Application servers avoid large file transfer.', 'Storage is durable and cost-effective.',
+                  'A simple worker can generate one derivative.'],
+                 ['CLIENT', 'UPLOAD API', 'OBJECT STORAGE', 'WORKER', 'CDN']),
+                ('bottleneck', 'PROCESSING QUEUE', '03 — Isolate expensive work',
+                 'Concurrent uploads and video encoding can overwhelm a single worker. Queue jobs and control concurrency.',
+                 ['Queue depth expresses demand safely.', 'Workers scale independently from the API.',
+                  'Failures must preserve the original upload for replay.'],
+                 ['CLIENT', 'LOAD BALANCER', 'UPLOAD API', 'OBJECT STORAGE', 'QUEUE', 'TRANSCODER', 'CDN']),
+                ('evolved', 'GLOBAL MEDIA PLATFORM', '04 — Scale delivery and processing independently',
+                 'Object storage is the source; events trigger specialized workers; a CDN serves finished assets close to users.',
+                 ['Separate image, video, and metadata workers.', 'Use lifecycle policies for originals and derivatives.',
+                  'Observe processing latency, failed jobs, and CDN cache hit rate.'],
+                 ['CLIENT', 'LOAD BALANCER', 'UPLOAD API', 'OBJECT STORAGE', 'KAFKA', 'IMAGE WORKER',
+                  'TRANSCODER', 'POSTGRESQL', 'CDN', 'DLQ']),
+            ],
+        }
+
+        for scenario_key, stage_rows in stages_by_scenario.items():
+            scenario = Scenario.objects.get(key=scenario_key)
+            for order, (key, mode, title, text, points, nodes) in enumerate(stage_rows):
+                stage, _ = Stage.objects.update_or_create(
+                    scenario=scenario, key=key,
+                    defaults={'mode': mode, 'title': title, 'text': text, 'order': order},
+                )
+                stage.points.all().delete()
+                for i, point_text in enumerate(points):
+                    StagePoint.objects.create(stage=stage, text=point_text, order=i)
+                stage.nodes.all().delete()
+                for i, node_name in enumerate(nodes):
+                    StageNode.objects.create(stage=stage, name=node_name, order=i)
+
+        component_data = [
+            ('KAFKA', 'Kafka', 'Decouples API acceptance from external delivery.', 'Adds durable buffering and horizontal consumer scale.', 'Requires partitions, consumer operations, and idempotency.', 'RabbitMQ or a task queue for a simpler operating model.'),
+            ('REDIS', 'Redis', 'Protects Postgres from repeat reads and coordinates rate limits.', 'Low-latency cache and ephemeral counters.', 'Cache invalidation and a failure fallback are required.', 'In-process cache for smaller, single-instance workloads.'),
+            ('POSTGRESQL', 'PostgreSQL', 'Stores durable notification intent and delivery state.', 'Transactions and flexible relational queries fit auditability.', 'Write-heavy scaling requires careful indexes and partitioning.', 'NoSQL when access patterns and global scale clearly justify it.'),
+            ('DLQ', 'Dead-letter queue', 'Contains messages that repeatedly fail.', 'Prevents a poison event from blocking progress.', 'Needs monitoring and an explicit replay process.', 'Dropping messages — fast, but usually unacceptable.'),
+            ('CLIENT', 'Client', 'Initiates a user action or event.', 'Sends an idempotency key so retries do not create duplicate work.', 'Clients can retry unexpectedly and have unreliable networks.', 'Server-generated request identifiers alone.'),
+            ('API', 'API service', 'Accepts notification requests quickly.', 'Validates input and records durable intent before asynchronous delivery.', 'Must remain stateless and protected from traffic bursts.', 'Direct provider calls from the client.'),
+            ('LOAD BALANCER', 'Load balancer', 'One server cannot safely absorb all traffic.', 'Distributes requests across healthy, stateless API instances.', 'Adds health-check and routing configuration.', 'A single vertically scaled API server at low volume.'),
+            ('APPLICATION', 'Application server', 'Contains the first version of business logic.', 'Keeps deployment simple while the problem is small.', 'Couples request time to database and provider work.', 'Separate services only after a measured boundary appears.'),
+            ('DATABASE', 'Database', 'The early design needs durable state.', 'Stores accepted requests and delivery state.', 'Synchronous reads and writes become a scaling limit under bursts.', 'An in-memory store, which is not durable enough here.'),
+            ('PROVIDER', 'Notification provider', 'Actually sends email, SMS, or push messages.', 'Provides channel delivery capability outside the core system.', 'Latency, rate limits, and failures are outside your control.', 'Operating a channel delivery network directly.'),
+            ('PROVIDERS', 'Notification providers', 'Different channels need independent failure boundaries.', 'Workers route work to email, SMS, or push providers.', 'Each provider needs throttling, retries, and delivery observability.', 'One provider for every channel.'),
+            ('PAYMENTS API', 'Payments API', 'Clients need a stable, authenticated payment boundary.', 'Validates the request and persists one payment intent per idempotency key.', 'It must never infer success from a gateway timeout.', 'Letting clients call gateways directly.'),
+            ('PAYMENT SERVICE', 'Payment service', 'Gateway-specific logic should not leak through the API.', 'Owns the payment state machine and gateway adapter.', 'Adds another logical boundary to operate and test.', 'Placing gateway code directly in controllers.'),
+            ('GATEWAY', 'Payment gateway', 'Processes an external financial transaction.', 'Authorizes or captures funds and returns provider references.', 'Responses can be delayed, duplicated, or ambiguous.', 'Building card processing infrastructure.'),
+            ('WEBHOOKS', 'Gateway webhooks', 'Some payment outcomes arrive asynchronously.', 'Reconciles the ledger with signed provider events.', 'Events can be delivered more than once or out of order.', 'Polling only, which increases latency and cost.'),
+            ('OUTBOX', 'Transactional outbox', 'A database write and emitted event must not diverge.', 'Records an event in the same transaction as the payment state.', 'Requires a publisher and cleanup policy.', 'Publishing directly after commit, which can lose events on a crash.'),
+            ('RECONCILER', 'Reconciliation worker', 'Provider and internal state can temporarily disagree.', 'Matches gateway records, webhooks, and the ledger.', 'Needs clear remediation paths for exceptions.', 'Assuming every gateway response is final.'),
+            ('AUDIT LOG', 'Audit log', 'Financial changes need a traceable history.', 'Preserves who changed what and when for investigation.', 'Retention and access control add operational obligations.', 'Overwriting mutable records without history.'),
+            ('UPLOAD API', 'Upload API', 'Users need authorization without streaming files through app servers.', 'Issues signed upload URLs and records media intent.', 'Signed URL expiry and upload validation need careful design.', 'Proxying every large upload through the web application.'),
+            ('OBJECT STORAGE', 'Object storage', 'Original media must be durable and inexpensive to store.', 'Stores uploads and processed derivatives independently of compute.', 'Lifecycle, permissions, and event consistency must be managed.', 'Database blobs for large media.'),
+            ('QUEUE', 'Processing queue', 'Encoding work must not block an upload request.', 'Buffers jobs and controls worker concurrency.', 'Requires retry policy and backlog monitoring.', 'Running transformations inline in the API.'),
+            ('TRANSCODER', 'Transcoder', 'Video and image conversion are CPU-intensive.', 'Creates delivery-ready formats asynchronously.', 'Workers are expensive and need resource limits.', 'Serving original files only.'),
+            ('CDN', 'Content delivery network', 'Global users should not fetch every asset from origin storage.', 'Caches finished assets near users and reduces origin load.', 'Invalidation and cache-key design require discipline.', 'Serving all media directly from the application.'),
+            ('IMAGE WORKER', 'Image worker', 'Image transformations differ from video workloads.', 'Scales image resizing and metadata extraction independently.', 'More worker types increase deployment surface area.', 'One generic worker when workloads remain small.'),
+        ]
+        for name, display_name, problem, decision, tradeoff, alternatives in component_data:
+            Component.objects.update_or_create(
+                name=name,
+                defaults={'display_name': display_name, 'problem': problem, 'decision': decision,
+                          'tradeoff': tradeoff, 'alternatives': alternatives},
+            )
+
+        decision_data = [
+            ('Why Kafka?', 'The API should not wait for external notification providers.', 'Decouple acceptance from delivery with a durable event stream.', 'Benefits: burst absorption, horizontal consumers, replayability. Trade-offs: operations, ordering, duplicate processing.', 'Alternatives: RabbitMQ, Celery, direct synchronous processing.'),
+            ('PostgreSQL vs NoSQL', 'Delivery intent needs transactional, queryable state.', 'Use PostgreSQL as the source of truth.', 'Transactions and relationships fit audit trails; scaling is vertical plus targeted horizontal strategies.', 'NoSQL is a valid choice for different access patterns or global distribution requirements.'),
+            ('Retries + idempotency', 'Providers fail and at-least-once queues can redeliver.', 'Retry with backoff; dedupe by idempotency key.', 'Reliable delivery without duplicate user notifications. Trade-off: state and retry policy complexity.', 'Alternatives: best-effort delivery or provider-only retries.'),
+        ]
+        for order, (title, problem, decision, detail, alternatives) in enumerate(decision_data):
+            Decision.objects.update_or_create(
+                title=title,
+                defaults={'problem': problem, 'decision': decision, 'detail': detail,
+                          'alternatives': alternatives, 'order': order},
+            )
+
+        failure_data = [
+            ('Kafka goes down', 'Event stream unavailable', 'New events are durably held at the API boundary or rejected with a retryable response; workers drain the backlog after recovery.', 'Use multi-broker replication, health checks, and a bounded fallback queue.'),
+            ('Redis goes down', 'Increased database traffic', 'Requests bypass cache and fall back to PostgreSQL. The core system remains operational with higher latency.', 'Circuit-break the cache client and protect Postgres with rate limits.'),
+            ('Database becomes slow', 'Delivery state reads and writes slow down', 'Consumers reduce concurrency; queue lag rises instead of exhausting the database.', 'Alert on latency, use indexes/replicas where appropriate, and preserve headroom.'),
+            ('Notification provider fails', 'One channel is delayed', 'Workers back off, retry on a separate schedule, and route exhausted events to the DLQ.', 'Provider-level circuit breakers and secondary providers limit blast radius.'),
+            ('Consumer crashes', 'One partition pauses', 'Another consumer claims work after rebalance; idempotency protects redelivery.', 'Autoscaling, liveness checks, and graceful shutdown limit interruption.'),
+            ('Traffic suddenly increases 10×', 'Backlog grows', 'Kafka absorbs the burst while autoscaling workers increases delivery throughput.', 'Rate limiting and provider throttling prevent downstream collapse.'),
+        ]
+        for order, (name, impact, response, recovery) in enumerate(failure_data):
+            FailureMode.objects.update_or_create(
+                name=name,
+                defaults={'impact': impact, 'response': response, 'recovery': recovery, 'order': order},
+            )
+
+        adr_data = [
+            ('ADR-001', 'Use asynchronous processing for notification delivery.', 'Decision: Kafka-based event processing. Reason: decouple API requests from external providers. Rejected: synchronous delivery. Trade-off: increased infrastructure complexity.'),
+            ('ADR-002', 'Treat delivery as at-least-once.', 'Decision: idempotency keys and durable delivery state. Reason: provider and worker failures make exactly-once delivery impractical end-to-end.'),
+            ('ADR-003', 'Use Redis selectively.', 'Decision: cache templates, preferences, and counters — not the durable delivery record. Reason: failure must degrade safely.'),
+        ]
+        for order, (identifier, title, detail) in enumerate(adr_data):
+            ArchitectureDecisionRecord.objects.update_or_create(
+                identifier=identifier,
+                defaults={'title': title, 'detail': detail, 'order': order},
+            )
+
+        metric_data = [
+            (0, '10K events/day', '10,000', '0.1 events/sec', '82 ms', '0.01%', '—', '12%'),
+            (1, '100K events/day', '100,000', '1.2 events/sec', '110 ms', '0.03%', '—', '24%'),
+            (2, '1M events/day', '1,000,000', '11.6 events/sec', '148 ms', '0.05%', '43', '41%'),
+            (3, '10M events/day', '10,000,000', '116 events/sec', '182 ms', '0.08%', '213', '64%'),
+        ]
+        for level, traffic_label, events, throughput, latency, error_rate, queue_lag, db_load in metric_data:
+            TrafficMetric.objects.update_or_create(
+                level=level,
+                defaults={'traffic_label': traffic_label, 'events': events, 'throughput': throughput,
+                          'latency': latency, 'error_rate': error_rate, 'queue_lag': queue_lag, 'db_load': db_load},
+            )
+
+        plan_data = {
+            'notification': [
+                (0, 'Simple notification service', 'API → PostgreSQL → Worker → Provider'),
+                (1, 'Queued delivery service', 'API → Queue → Workers → Provider + PostgreSQL'),
+                (2, 'Durable event pipeline', 'Load Balancer → API → Kafka → Workers → Providers + Redis + PostgreSQL'),
+                (3, 'Highly available delivery platform', 'Multi-AZ API → Kafka → autoscaled workers → multi-provider routing + DLQ'),
+            ],
+            'payments': [
+                (0, 'Transactional payment core', 'Payments API → PostgreSQL → Gateway'),
+                (1, 'Idempotent payment service', 'Payments API → Payment Service → PostgreSQL → Gateway'),
+                (2, 'Outbox-backed payment workflow', 'Payments API → PostgreSQL + Outbox → Kafka → Reconciler → Gateway'),
+                (3, 'Highly reliable payments platform', 'Multi-AZ API → Ledger + Outbox → reconciliation workers → gateway failover'),
+            ],
+            'media': [
+                (0, 'Direct upload service', 'Upload API → Object Storage → CDN'),
+                (1, 'Async media worker', 'Upload API → Object Storage → Queue → Worker → CDN'),
+                (2, 'Scalable processing pipeline', 'Load Balancer → Upload API → Storage → Kafka → workers → CDN'),
+                (3, 'Global media platform', 'Multi-region upload → storage → specialist workers → CDN + DLQ'),
+            ],
+        }
+        for scenario_key, tiers in plan_data.items():
+            scenario = Scenario.objects.get(key=scenario_key)
+            for tier, name, diagram in tiers:
+                SimulatorPlan.objects.update_or_create(
+                    scenario=scenario, tier=tier,
+                    defaults={'name': name, 'diagram': diagram},
+                )
+
+        bottleneck_data = [
+            (0, 'Single service capacity'),
+            (1, 'Queue backlog and downstream limits'),
+            (2, 'Worker concurrency and third-party quotas'),
+            (3, 'Cross-region operations and cost'),
+        ]
+        for tier, text in bottleneck_data:
+            SimulatorBottleneck.objects.update_or_create(tier=tier, defaults={'text': text})
+
+        self.stdout.write('  ✓ Lab details (stages, components, decisions, failures, ADRs, metrics, simulator) created/updated')
+
+    def _seed_projects(self):
+        from apps.portfolio.models import Project
+        # Keyed by slug so this both fills in missing projects and fixes up
+        # placeholder content on ones already created (e.g. via admin).
+        project_data = [
+            {
+                'slug': 'patient-registry',
+                'title': 'Patient Registry System',
+                'description': '21 CFR Part 11-compliant patient registry for capturing and auditing patient records across a healthcare organization.',
+                'problem': 'Manual, spreadsheet-driven patient tracking led to data silos and compliance risk.',
+                'outcome': 'Replaced manual tracking with a centralized, audit-ready system.',
+                'tech_stack': ['Django', 'DRF', 'PostgreSQL', 'sci-spaCy', 'Celery'],
+                'is_featured': True, 'order': 0,
+            },
+            {
+                'slug': 'etl-tool',
+                'title': 'ETL Tool',
+                'description': 'Configurable ETL pipeline for ingesting, transforming, and loading large third-party datasets on a schedule.',
+                'problem': 'Manual data imports were slow and error-prone for large datasets.',
+                'outcome': 'Replaced slow manual imports with scheduled, automated processing.',
+                'tech_stack': ['Python', 'Pandas', 'Celery', 'PostgreSQL'],
+                'is_featured': True, 'order': 1,
+            },
+            {
+                'slug': 'real-time-analytics-dashboard',
+                'title': 'Real-Time Analytics Dashboard',
+                'description': 'Kafka-backed streaming pipeline feeding live Chart.js/Go.js dashboards for operational visibility.',
+                'outcome': 'Enabled real-time operational visibility without manual polling.',
+                'tech_stack': ['Django', 'Kafka', 'Chart.js', 'Go.js', 'PostgreSQL'],
+                'is_featured': True, 'order': 2,
+            },
+        ]
+        for p in project_data:
+            slug = p.pop('slug')
+            Project.objects.update_or_create(slug=slug, defaults=p)
+        self.stdout.write('  ✓ Projects created/updated')

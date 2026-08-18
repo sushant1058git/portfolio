@@ -140,6 +140,186 @@ class Project(models.Model):
         return self.title
 
 
+class Scenario(models.Model):
+    """A scenario card on the Architecture Decision Lab page.
+
+    `key` must match a scenario key in architecture-lab.js (e.g. 'notification',
+    'payments', 'media') so the JS can look up the matching stage/decision data
+    for whichever card is opened.
+    """
+    key               = models.SlugField(unique=True, help_text="Must match a scenario key in architecture-lab.js, e.g. 'notification'")
+    number            = models.CharField(max_length=10, help_text="e.g. '01'")
+    difficulty        = models.CharField(max_length=100, help_text="e.g. 'SENIOR / SYSTEM DESIGN'")
+    title             = models.CharField(max_length=200)
+    description       = models.TextField()
+    requirement_chips = models.JSONField(default=list, help_text='["10M events/day","Retries + dedupe"]')
+    journey_title     = models.CharField(max_length=200, blank=True, help_text="Heading shown once the scenario is opened, e.g. 'Notification delivery, from first principles.'")
+    order             = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return self.title
+
+
+class Stage(models.Model):
+    """One step (requirements / initial / bottleneck / evolved) of a scenario's architecture journey."""
+    STAGE_CHOICES = [
+        ('requirements', 'Requirements'),
+        ('initial', 'Start Simple'),
+        ('bottleneck', 'Find Limits'),
+        ('evolved', 'Evolve'),
+    ]
+    scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE, related_name='stages')
+    key      = models.CharField(max_length=20, choices=STAGE_CHOICES)
+    mode     = models.CharField(max_length=100, help_text="e.g. 'FOUNDATION'")
+    title    = models.CharField(max_length=200, help_text="e.g. '01 — Frame the constraints'")
+    text     = models.TextField()
+    order    = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+        unique_together = ['scenario', 'key']
+
+    def __str__(self):
+        return f'{self.scenario.key} / {self.key}'
+
+
+class StagePoint(models.Model):
+    """A bullet point under a stage's explanation."""
+    stage = models.ForeignKey(Stage, on_delete=models.CASCADE, related_name='points')
+    text  = models.TextField()
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return self.text[:50]
+
+
+class StageNode(models.Model):
+    """One component shown in a stage's architecture diagram, e.g. 'KAFKA'."""
+    stage = models.ForeignKey(Stage, on_delete=models.CASCADE, related_name='nodes')
+    name  = models.CharField(max_length=100, help_text="Must match a Component name to power the inspector, e.g. 'KAFKA'")
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return self.name
+
+
+class Component(models.Model):
+    """Shared component-inspector info, looked up by name from any stage's diagram nodes."""
+    name         = models.CharField(max_length=100, unique=True, help_text="Must match a StageNode name, e.g. 'KAFKA'")
+    display_name = models.CharField(max_length=100)
+    problem      = models.TextField()
+    decision     = models.TextField()
+    tradeoff     = models.TextField()
+    alternatives = models.TextField()
+
+    class Meta:
+        ordering = ['display_name']
+
+    def __str__(self):
+        return self.display_name
+
+
+class Decision(models.Model):
+    """A card in the 'Decisions, not dogma' section."""
+    title        = models.CharField(max_length=200)
+    problem      = models.TextField()
+    decision     = models.TextField()
+    detail       = models.TextField()
+    alternatives = models.TextField()
+    order        = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return self.title
+
+
+class FailureMode(models.Model):
+    """A button/result pair in the 'Break the system' resilience section."""
+    name     = models.CharField(max_length=200, help_text="e.g. 'Kafka goes down'")
+    impact   = models.CharField(max_length=200)
+    response = models.TextField()
+    recovery = models.TextField()
+    order    = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return self.name
+
+
+class ArchitectureDecisionRecord(models.Model):
+    """An entry in the ADR log."""
+    identifier = models.CharField(max_length=20, help_text="e.g. 'ADR-001'")
+    title      = models.CharField(max_length=300)
+    detail     = models.TextField()
+    order      = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+        verbose_name = 'ADR'
+        verbose_name_plural = 'ADRs'
+
+    def __str__(self):
+        return f'{self.identifier}: {self.title}'
+
+
+class TrafficMetric(models.Model):
+    """Simulated metrics for one position (0-3) of the traffic slider."""
+    level         = models.PositiveIntegerField(unique=True, help_text='0-3, matches the traffic slider position')
+    traffic_label = models.CharField(max_length=50, help_text="e.g. '10K events/day'")
+    events        = models.CharField(max_length=50, help_text="e.g. '10,000'")
+    throughput    = models.CharField(max_length=50)
+    latency       = models.CharField(max_length=50)
+    error_rate    = models.CharField(max_length=50)
+    queue_lag     = models.CharField(max_length=50)
+    db_load       = models.CharField(max_length=50)
+
+    class Meta:
+        ordering = ['level']
+
+    def __str__(self):
+        return self.traffic_label
+
+
+class SimulatorPlan(models.Model):
+    """One recommended architecture tier (0-3) for a scenario's 'what would you change' simulator."""
+    scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE, related_name='simulator_plans')
+    tier     = models.PositiveIntegerField(help_text='0-3, matches the computed pressure tier')
+    name     = models.CharField(max_length=200)
+    diagram  = models.TextField()
+
+    class Meta:
+        ordering = ['tier']
+        unique_together = ['scenario', 'tier']
+
+    def __str__(self):
+        return f'{self.scenario.key} / tier {self.tier}'
+
+
+class SimulatorBottleneck(models.Model):
+    """Shared bottleneck description per simulator pressure tier (0-3)."""
+    tier = models.PositiveIntegerField(unique=True)
+    text = models.CharField(max_length=300)
+
+    class Meta:
+        ordering = ['tier']
+
+    def __str__(self):
+        return f'Tier {self.tier}: {self.text}'
+
+
 class CurrentlyWorking(models.Model):
     """Singleton — only one active record shown."""
     title       = models.CharField(max_length=200, help_text="What are you building/learning?")

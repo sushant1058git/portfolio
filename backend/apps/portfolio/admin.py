@@ -45,7 +45,11 @@ class CertificationAdmin(admin.ModelAdmin):
     list_display = ['name', 'issuer', 'year']
 
 
-from .models import Project, CurrentlyWorking
+from .models import Project, CurrentlyWorking, Scenario
+from .models import (
+    Stage, StagePoint, StageNode, Component, Decision, FailureMode,
+    ArchitectureDecisionRecord, TrafficMetric, SimulatorPlan, SimulatorBottleneck,
+)
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
@@ -55,3 +59,70 @@ class ProjectAdmin(admin.ModelAdmin):
 @admin.register(CurrentlyWorking)
 class CurrentlyWorkingAdmin(admin.ModelAdmin):
     list_display = ['title', 'type', 'progress', 'is_active', 'updated_at']
+
+
+class StageInline(admin.TabularInline):
+    model = Stage
+    extra = 0
+    fields = ['key', 'mode', 'title', 'order']
+    show_change_link = True
+
+
+class SimulatorPlanInline(admin.TabularInline):
+    model = SimulatorPlan
+    extra = 0
+
+
+@admin.register(Scenario)
+class ScenarioAdmin(admin.ModelAdmin):
+    list_display = ['title', 'key', 'difficulty', 'order']
+    prepopulated_fields = {'key': ('title',)}
+    inlines = [StageInline, SimulatorPlanInline]
+
+
+class StagePointInline(admin.TabularInline):
+    model = StagePoint
+    extra = 1
+
+
+class StageNodeInline(admin.TabularInline):
+    model = StageNode
+    extra = 1
+
+
+@admin.register(Stage)
+class StageAdmin(admin.ModelAdmin):
+    list_display = ['scenario', 'key', 'mode', 'title', 'order']
+    list_filter = ['scenario']
+    inlines = [StagePointInline, StageNodeInline]
+
+
+@admin.register(Component)
+class ComponentAdmin(admin.ModelAdmin):
+    list_display = ['display_name', 'name']
+    search_fields = ['name', 'display_name']
+
+
+@admin.register(Decision)
+class DecisionAdmin(admin.ModelAdmin):
+    list_display = ['title', 'order']
+
+
+@admin.register(FailureMode)
+class FailureModeAdmin(admin.ModelAdmin):
+    list_display = ['name', 'impact', 'order']
+
+
+@admin.register(ArchitectureDecisionRecord)
+class ArchitectureDecisionRecordAdmin(admin.ModelAdmin):
+    list_display = ['identifier', 'title', 'order']
+
+
+@admin.register(TrafficMetric)
+class TrafficMetricAdmin(admin.ModelAdmin):
+    list_display = ['level', 'traffic_label', 'events', 'throughput', 'latency', 'error_rate']
+
+
+@admin.register(SimulatorBottleneck)
+class SimulatorBottleneckAdmin(admin.ModelAdmin):
+    list_display = ['tier', 'text']

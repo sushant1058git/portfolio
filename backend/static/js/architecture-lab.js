@@ -1,100 +1,196 @@
 (() => {
   const init = () => {
   const byId = (id) => document.getElementById(id);
-  const stages = {
-    requirements: { mode: 'FOUNDATION', title: '01 — Frame the constraints', text: 'Before selecting technology, make the shape of the problem explicit.', points: ['10M events/day ≈ 116 events/sec average; bursts matter more than averages.', 'P95 delivery latency under 500 ms; delivery is eventually consistent.', '99.9% availability, durable delivery intent, and bounded operational spend.'], nodes: ['CLIENT', 'API', 'DATABASE', 'PROVIDER'] },
-    initial: { mode: 'SIMPLE PATH', title: '02 — Start with one deployable', text: 'A synchronous service is the right first architecture when volume and failure modes are manageable.', points: ['Easy to build and deploy.', 'Low operational complexity.', 'The API is coupled to provider latency and availability.'], nodes: ['CLIENT', 'API', 'APPLICATION', 'POSTGRESQL', 'PROVIDER'] },
-    bottleneck: { mode: 'LOAD TEST', title: '03 — Find the limit', text: 'At sustained volume, the request path becomes the queue. Slow providers hold connections, retries amplify load, and the database becomes hot.', points: ['API latency climbs with provider latency.', 'Connection pools exhaust during retry storms.', 'Synchronous processing cannot absorb bursts safely.'], nodes: ['CLIENT', 'LOAD BALANCER', 'API', 'APPLICATION', 'POSTGRESQL', 'PROVIDER'] },
-    evolved: { mode: 'DURABLE PIPELINE', title: '04 — Decouple the critical path', text: 'Keep accepting requests quickly, then let independent channel workers deliver from a durable stream.', points: ['Kafka buffers bursts and enables independent scaling.', 'Idempotency keys make at-least-once delivery safe.', 'Retry queues and a DLQ prevent poisoned events from blocking healthy work.'], nodes: ['CLIENT', 'LOAD BALANCER', 'API', 'KAFKA', 'EMAIL WORKER', 'SMS WORKER', 'PUSH WORKER', 'REDIS', 'POSTGRESQL', 'DLQ', 'PROVIDERS'] }
-  };
-  const componentInfo = {
-    'KAFKA': ['Kafka', 'Decouples API acceptance from external delivery.', 'Adds durable buffering and horizontal consumer scale.', 'Requires partitions, consumer operations, and idempotency.', 'RabbitMQ or a task queue for a simpler operating model.'],
-    'REDIS': ['Redis', 'Protects Postgres from repeat reads and coordinates rate limits.', 'Low-latency cache and ephemeral counters.', 'Cache invalidation and a failure fallback are required.', 'In-process cache for smaller, single-instance workloads.'],
-    'POSTGRESQL': ['PostgreSQL', 'Stores durable notification intent and delivery state.', 'Transactions and flexible relational queries fit auditability.', 'Write-heavy scaling requires careful indexes and partitioning.', 'NoSQL when access patterns and global scale clearly justify it.'],
-    'DLQ': ['Dead-letter queue', 'Contains messages that repeatedly fail.', 'Prevents a poison event from blocking progress.', 'Needs monitoring and an explicit replay process.', 'Dropping messages — fast, but usually unacceptable.']
-  };
-  Object.assign(componentInfo, {
-    'CLIENT': ['Client', 'Initiates a user action or event.', 'Sends an idempotency key so retries do not create duplicate work.', 'Clients can retry unexpectedly and have unreliable networks.', 'Server-generated request identifiers alone.'],
-    'API': ['API service', 'Accepts notification requests quickly.', 'Validates input and records durable intent before asynchronous delivery.', 'Must remain stateless and protected from traffic bursts.', 'Direct provider calls from the client.'],
-    'LOAD BALANCER': ['Load balancer', 'One server cannot safely absorb all traffic.', 'Distributes requests across healthy, stateless API instances.', 'Adds health-check and routing configuration.', 'A single vertically scaled API server at low volume.'],
-    'APPLICATION': ['Application server', 'Contains the first version of business logic.', 'Keeps deployment simple while the problem is small.', 'Couples request time to database and provider work.', 'Separate services only after a measured boundary appears.'],
-    'DATABASE': ['Database', 'The early design needs durable state.', 'Stores accepted requests and delivery state.', 'Synchronous reads and writes become a scaling limit under bursts.', 'An in-memory store, which is not durable enough here.'],
-    'PROVIDER': ['Notification provider', 'Actually sends email, SMS, or push messages.', 'Provides channel delivery capability outside the core system.', 'Latency, rate limits, and failures are outside your control.', 'Operating a channel delivery network directly.'],
-    'PROVIDERS': ['Notification providers', 'Different channels need independent failure boundaries.', 'Workers route work to email, SMS, or push providers.', 'Each provider needs throttling, retries, and delivery observability.', 'One provider for every channel.'],
-    'PAYMENTS API': ['Payments API', 'Clients need a stable, authenticated payment boundary.', 'Validates the request and persists one payment intent per idempotency key.', 'It must never infer success from a gateway timeout.', 'Letting clients call gateways directly.'],
-    'PAYMENT SERVICE': ['Payment service', 'Gateway-specific logic should not leak through the API.', 'Owns the payment state machine and gateway adapter.', 'Adds another logical boundary to operate and test.', 'Placing gateway code directly in controllers.'],
-    'GATEWAY': ['Payment gateway', 'Processes an external financial transaction.', 'Authorizes or captures funds and returns provider references.', 'Responses can be delayed, duplicated, or ambiguous.', 'Building card processing infrastructure.'],
-    'WEBHOOKS': ['Gateway webhooks', 'Some payment outcomes arrive asynchronously.', 'Reconciles the ledger with signed provider events.', 'Events can be delivered more than once or out of order.', 'Polling only, which increases latency and cost.'],
-    'OUTBOX': ['Transactional outbox', 'A database write and emitted event must not diverge.', 'Records an event in the same transaction as the payment state.', 'Requires a publisher and cleanup policy.', 'Publishing directly after commit, which can lose events on a crash.'],
-    'RECONCILER': ['Reconciliation worker', 'Provider and internal state can temporarily disagree.', 'Matches gateway records, webhooks, and the ledger.', 'Needs clear remediation paths for exceptions.', 'Assuming every gateway response is final.'],
-    'AUDIT LOG': ['Audit log', 'Financial changes need a traceable history.', 'Preserves who changed what and when for investigation.', 'Retention and access control add operational obligations.', 'Overwriting mutable records without history.'],
-    'UPLOAD API': ['Upload API', 'Users need authorization without streaming files through app servers.', 'Issues signed upload URLs and records media intent.', 'Signed URL expiry and upload validation need careful design.', 'Proxying every large upload through the web application.'],
-    'OBJECT STORAGE': ['Object storage', 'Original media must be durable and inexpensive to store.', 'Stores uploads and processed derivatives independently of compute.', 'Lifecycle, permissions, and event consistency must be managed.', 'Database blobs for large media.'],
-    'QUEUE': ['Processing queue', 'Encoding work must not block an upload request.', 'Buffers jobs and controls worker concurrency.', 'Requires retry policy and backlog monitoring.', 'Running transformations inline in the API.'],
-    'TRANSCODER': ['Transcoder', 'Video and image conversion are CPU-intensive.', 'Creates delivery-ready formats asynchronously.', 'Workers are expensive and need resource limits.', 'Serving original files only.'],
-    'CDN': ['Content delivery network', 'Global users should not fetch every asset from origin storage.', 'Caches finished assets near users and reduces origin load.', 'Invalidation and cache-key design require discipline.', 'Serving all media directly from the application.'],
-    'IMAGE WORKER': ['Image worker', 'Image transformations differ from video workloads.', 'Scales image resizing and metadata extraction independently.', 'More worker types increase deployment surface area.', 'One generic worker when workloads remain small.']
-  });
-  const metrics = [['10,000', '0.1 events/sec', '82 ms', '0.01%', '—', '12%'], ['100,000', '1.2 events/sec', '110 ms', '0.03%', '—', '24%'], ['1,000,000', '11.6 events/sec', '148 ms', '0.05%', '43', '41%'], ['10,000,000', '116 events/sec', '182 ms', '0.08%', '213', '64%']];
-  const decisions = [
-    ['Why Kafka?', 'The API should not wait for external notification providers.', 'Decouple acceptance from delivery with a durable event stream.', 'Benefits: burst absorption, horizontal consumers, replayability. Trade-offs: operations, ordering, duplicate processing.', 'Alternatives: RabbitMQ, Celery, direct synchronous processing.'],
-    ['PostgreSQL vs NoSQL', 'Delivery intent needs transactional, queryable state.', 'Use PostgreSQL as the source of truth.', 'Transactions and relationships fit audit trails; scaling is vertical plus targeted horizontal strategies.', 'NoSQL is a valid choice for different access patterns or global distribution requirements.'],
-    ['Retries + idempotency', 'Providers fail and at-least-once queues can redeliver.', 'Retry with backoff; dedupe by idempotency key.', 'Reliable delivery without duplicate user notifications. Trade-off: state and retry policy complexity.', 'Alternatives: best-effort delivery or provider-only retries.']
-  ];
-  const failures = {
-    'Kafka goes down': ['Event stream unavailable', 'New events are durably held at the API boundary or rejected with a retryable response; workers drain the backlog after recovery.', 'Use multi-broker replication, health checks, and a bounded fallback queue.'],
-    'Redis goes down': ['Increased database traffic', 'Requests bypass cache and fall back to PostgreSQL. The core system remains operational with higher latency.', 'Circuit-break the cache client and protect Postgres with rate limits.'],
-    'Database becomes slow': ['Delivery state reads and writes slow down', 'Consumers reduce concurrency; queue lag rises instead of exhausting the database.', 'Alert on latency, use indexes/replicas where appropriate, and preserve headroom.'],
-    'Notification provider fails': ['One channel is delayed', 'Workers back off, retry on a separate schedule, and route exhausted events to the DLQ.', 'Provider-level circuit breakers and secondary providers limit blast radius.'],
-    'Consumer crashes': ['One partition pauses', 'Another consumer claims work after rebalance; idempotency protects redelivery.', 'Autoscaling, liveness checks, and graceful shutdown limit interruption.'],
-    'Traffic suddenly increases 10×': ['Backlog grows', 'Kafka absorbs the burst while autoscaling workers increases delivery throughput.', 'Rate limiting and provider throttling prevent downstream collapse.']
-  };
-  const adr = [['ADR-001', 'Use asynchronous processing for notification delivery.', 'Decision: Kafka-based event processing. Reason: decouple API requests from external providers. Rejected: synchronous delivery. Trade-off: increased infrastructure complexity.'], ['ADR-002', 'Treat delivery as at-least-once.', 'Decision: idempotency keys and durable delivery state. Reason: provider and worker failures make exactly-once delivery impractical end-to-end.'], ['ADR-003', 'Use Redis selectively.', 'Decision: cache templates, preferences, and counters — not the durable delivery record. Reason: failure must degrade safely.']];
-  const scenarios = {
-    notification: { title: 'Notification delivery, from first principles.', stages },
-    payments: { title: 'Payment correctness, from first principles.', stages: {
-      requirements: { mode: 'MONEY MOVEMENT', title: '01 — Protect correctness first', text: 'A payment system is defined by durable state, idempotency, and a full audit trail — not request throughput alone.', points: ['Never charge twice for the same client intent.', 'Record every state transition durably.', 'External gateway success can arrive late or be ambiguous.'], nodes: ['CLIENT', 'PAYMENTS API', 'POSTGRESQL', 'GATEWAY'] },
-      initial: { mode: 'SIMPLE LEDGER', title: '02 — Start with a transactional core', text: 'One payment service and PostgreSQL give a clear source of truth before integrations become complex.', points: ['A transaction records payment intent and ledger state.', 'The gateway call is isolated behind one service.', 'A timeout must not be interpreted as a failed charge.'], nodes: ['CLIENT', 'PAYMENTS API', 'PAYMENT SERVICE', 'POSTGRESQL', 'GATEWAY'] },
-      bottleneck: { mode: 'RECONCILIATION', title: '03 — Make uncertainty explicit', text: 'Gateway retries, webhooks, and slow responses create ambiguous outcomes. Correctness needs a state machine, not blind retries.', points: ['Idempotency keys bind client intent to one payment.', 'Webhook events are verified and reconciled.', 'The ledger remains the audit source of truth.'], nodes: ['CLIENT', 'LOAD BALANCER', 'PAYMENTS API', 'POSTGRESQL', 'GATEWAY', 'WEBHOOKS'] },
-      evolved: { mode: 'RELIABLE LEDGER', title: '04 — Separate the ledger from side effects', text: 'Persist the intent, emit an outbox event, and let workers handle receipts, reconciliation, and retries safely.', points: ['PostgreSQL transaction + outbox prevents lost events.', 'Workers process gateway callbacks idempotently.', 'Monitoring watches reconciliation lag and payment state drift.'], nodes: ['CLIENT', 'LOAD BALANCER', 'PAYMENTS API', 'POSTGRESQL', 'OUTBOX', 'KAFKA', 'RECONCILER', 'GATEWAY', 'AUDIT LOG'] }
-    } },
-    media: { title: 'Media processing, from first principles.', stages: {
-      requirements: { mode: 'UPLOAD PIPELINE', title: '01 — Keep uploads off the request server', text: 'Large files and slow encoding should never occupy web workers or block a user request.', points: ['Uploads can be gigabytes and resumable.', 'Processing is CPU intensive and asynchronous.', 'Published media needs low-latency global delivery.'], nodes: ['CLIENT', 'UPLOAD API', 'OBJECT STORAGE', 'CDN'] },
-      initial: { mode: 'DIRECT UPLOAD', title: '02 — Start with direct-to-storage uploads', text: 'The API issues signed upload URLs. The browser transfers directly to object storage.', points: ['Application servers avoid large file transfer.', 'Storage is durable and cost-effective.', 'A simple worker can generate one derivative.'], nodes: ['CLIENT', 'UPLOAD API', 'OBJECT STORAGE', 'WORKER', 'CDN'] },
-      bottleneck: { mode: 'PROCESSING QUEUE', title: '03 — Isolate expensive work', text: 'Concurrent uploads and video encoding can overwhelm a single worker. Queue jobs and control concurrency.', points: ['Queue depth expresses demand safely.', 'Workers scale independently from the API.', 'Failures must preserve the original upload for replay.'], nodes: ['CLIENT', 'LOAD BALANCER', 'UPLOAD API', 'OBJECT STORAGE', 'QUEUE', 'TRANSCODER', 'CDN'] },
-      evolved: { mode: 'GLOBAL MEDIA PLATFORM', title: '04 — Scale delivery and processing independently', text: 'Object storage is the source; events trigger specialized workers; a CDN serves finished assets close to users.', points: ['Separate image, video, and metadata workers.', 'Use lifecycle policies for originals and derivatives.', 'Observe processing latency, failed jobs, and CDN cache hit rate.'], nodes: ['CLIENT', 'LOAD BALANCER', 'UPLOAD API', 'OBJECT STORAGE', 'KAFKA', 'IMAGE WORKER', 'TRANSCODER', 'POSTGRESQL', 'CDN', 'DLQ'] }
-    } }
-  };
+
+  let shared = null;              // { components, traffic_metrics, decisions, failure_modes, adrs, simulator_bottlenecks }
+  const scenarioDetails = {};     // keyed by scenario key, fetched lazily from /api/scenarios/<key>/
   let activeStage = 'requirements';
-  let activeScenario = 'notification';
-  function renderStage() { const stage = scenarios[activeScenario].stages[activeStage]; byId('architecture-mode').textContent = stage.mode; document.querySelector('.journey .section-head h2').textContent = scenarios[activeScenario].title; byId('stage-copy').innerHTML = `<span class="section-kicker">${stage.mode}</span><h3>${stage.title}</h3><p>${stage.text}</p><ul>${stage.points.map(x => `<li>${x}</li>`).join('')}</ul>`; const d = byId('architecture-diagram'); d.innerHTML = stage.nodes.map((n, i) => `<button class="diagram-node" data-component="${n}">${n}</button>${i < stage.nodes.length - 1 ? '<span class="diagram-arrow">→</span>' : ''}`).join(''); d.querySelectorAll('.diagram-node').forEach(n => n.onclick = () => inspect(n.dataset.component)); }
-  function inspect(name) { const info = componentInfo[name] || [name, 'This component supports the delivery path at this stage.', 'It keeps the architecture legible while the constraints remain visible.', 'Every component adds surface area to operate.', 'A simpler design until the measured bottleneck requires it.']; let panel = byId('component-inspector'); if (!panel) { panel = document.createElement('aside'); panel.id = 'component-inspector'; panel.className = 'component-inspector'; document.querySelector('.journey-layout').after(panel); } panel.innerHTML = `<span class="section-kicker">COMPONENT INSPECTION</span><h3>Why ${info[0]}?</h3><p><b>Problem:</b> ${info[1]}</p><p><b>Decision:</b> ${info[2]}</p><p><b>Trade-off:</b> ${info[3]}</p><p><b>Alternatives:</b> ${info[4]}</p>`; panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
-  function updateMetrics(v) { const values = metrics[v]; ['events','throughput','latency','errors','lag','db'].forEach((k,i) => byId(`metric-${k}`).textContent = values[i]); if (v >= 2 && activeStage !== 'evolved') { activeStage = 'bottleneck'; renderStage(); } }
-  function recommendation() { const t=+byId('sim-traffic').value,l=+byId('sim-latency').value,a=+byId('sim-availability').value,b=+byId('sim-budget').value; const advanced=t>=2 || l>=2 || a>=2; const name=advanced?'Durable asynchronous pipeline':'Focused monolith + worker'; const diagram=advanced?'Load Balancer → API → Kafka → Workers → Providers\n                         ↘ Redis + PostgreSQL + DLQ':'API → PostgreSQL → Worker → Provider'; const bottleneck=advanced?'Provider throttling and consumer lag':'Database and synchronous provider latency'; byId('recommendation').innerHTML=`<span class="section-kicker">RECOMMENDED ARCHITECTURE</span><h3>${name}</h3><pre>${diagram}</pre><p>Simulation-based guidance, not an absolute benchmark. The recommendation changes because constraints change.</p><dl><div><dt>COMPLEXITY</dt><dd>${advanced?'High / justified':'Low / appropriate'}</dd></div><div><dt>SCALABILITY</dt><dd>${advanced?'Horizontal':'Moderate'}</dd></div><div><dt>COST PROFILE</dt><dd>${'$'.repeat(b+1)}</dd></div><div><dt>PRIMARY BOTTLENECK</dt><dd>${bottleneck}</dd></div></dl>`; ['sim-traffic','sim-latency','sim-availability','sim-budget'].forEach((id,i)=>{const labels=[['10K events/day','100K events/day','1M events/day','10M events/day'],['500 ms','250 ms','100 ms','20 ms'],['99%','99.5%','99.9%','99.99%'],['$','$$','$$$','$$$$$']];byId(id).nextElementSibling.textContent=labels[i][+byId(id).value];}); }
+  let activeScenario = null;
+
+  function renderStage() {
+    const detail = scenarioDetails[activeScenario];
+    if (!detail) return;
+    const stage = detail.stages[activeStage];
+    if (!stage) return;
+    byId('architecture-mode').textContent = stage.mode;
+    document.querySelector('.journey .section-head h2').textContent = detail.journey_title || detail.title;
+    byId('stage-copy').innerHTML = `<span class="section-kicker">${stage.mode}</span><h3>${stage.title}</h3><p>${stage.text}</p><ul>${stage.points.map(x => `<li>${x}</li>`).join('')}</ul>`;
+    const d = byId('architecture-diagram');
+    d.innerHTML = stage.nodes.map((n, i) => `<button class="diagram-node" data-component="${n}">${n}</button>${i < stage.nodes.length - 1 ? '<span class="diagram-arrow">→</span>' : ''}`).join('');
+    d.querySelectorAll('.diagram-node').forEach(n => n.onclick = () => inspect(n.dataset.component));
+  }
+
+  function inspect(name) {
+    const c = shared && shared.components[name];
+    const info = c
+      ? [c.display_name, c.problem, c.decision, c.tradeoff, c.alternatives]
+      : [name, 'This component supports the delivery path at this stage.', 'It keeps the architecture legible while the constraints remain visible.', 'Every component adds surface area to operate.', 'A simpler design until the measured bottleneck requires it.'];
+    let panel = byId('component-inspector');
+    if (!panel) {
+      panel = document.createElement('aside');
+      panel.id = 'component-inspector';
+      panel.className = 'component-inspector';
+      document.querySelector('.journey-layout').after(panel);
+    }
+    panel.innerHTML = `<span class="section-kicker">COMPONENT INSPECTION</span><h3>Why ${info[0]}?</h3><p><b>Problem:</b> ${info[1]}</p><p><b>Decision:</b> ${info[2]}</p><p><b>Trade-off:</b> ${info[3]}</p><p><b>Alternatives:</b> ${info[4]}</p>`;
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function updateMetrics(v) {
+    if (!shared) return;
+    const m = shared.traffic_metrics[v];
+    if (!m) return;
+    byId('metric-events').textContent = m.events;
+    byId('metric-throughput').textContent = m.throughput;
+    byId('metric-latency').textContent = m.latency;
+    byId('metric-errors').textContent = m.error_rate;
+    byId('metric-lag').textContent = m.queue_lag;
+    byId('metric-db').textContent = m.db_load;
+    if (v >= 2 && activeStage !== 'evolved') { activeStage = 'bottleneck'; renderStage(); }
+  }
+
   function recommendation() {
+    const detail = scenarioDetails[activeScenario];
+    if (!detail || !shared) return;
     const values = ['sim-traffic', 'sim-latency', 'sim-availability', 'sim-budget'].map(id => +byId(id).value);
     const [traffic, latency, availability, budget] = values;
-    const labels = [['10K events/day','100K events/day','1M events/day','10M events/day'],['500 ms','250 ms','100 ms','20 ms'],['99%','99.5%','99.9%','99.99%'],['$','$$','$$$','$$$$$']];
-    ['sim-traffic','sim-latency','sim-availability','sim-budget'].forEach((id, index) => byId(id).nextElementSibling.textContent = labels[index][values[index]]);
+    const labels = [['10K events/day', '100K events/day', '1M events/day', '10M events/day'], ['500 ms', '250 ms', '100 ms', '20 ms'], ['99%', '99.5%', '99.9%', '99.99%'], ['$', '$$', '$$$', '$$$$$']];
+    ['sim-traffic', 'sim-latency', 'sim-availability', 'sim-budget'].forEach((id, index) => byId(id).nextElementSibling.textContent = labels[index][values[index]]);
     const pressure = traffic + latency + availability - budget;
     const tier = pressure <= 0 ? 0 : pressure <= 3 ? 1 : pressure <= 6 ? 2 : 3;
-    const plans = {
-      notification: [['Simple notification service','API → PostgreSQL → Worker → Provider'],['Queued delivery service','API → Queue → Workers → Provider + PostgreSQL'],['Durable event pipeline','Load Balancer → API → Kafka → Workers → Providers + Redis + PostgreSQL'],['Highly available delivery platform','Multi-AZ API → Kafka → autoscaled workers → multi-provider routing + DLQ']],
-      payments: [['Transactional payment core','Payments API → PostgreSQL → Gateway'],['Idempotent payment service','Payments API → Payment Service → PostgreSQL → Gateway'],['Outbox-backed payment workflow','Payments API → PostgreSQL + Outbox → Kafka → Reconciler → Gateway'],['Highly reliable payments platform','Multi-AZ API → Ledger + Outbox → reconciliation workers → gateway failover']],
-      media: [['Direct upload service','Upload API → Object Storage → CDN'],['Async media worker','Upload API → Object Storage → Queue → Worker → CDN'],['Scalable processing pipeline','Load Balancer → Upload API → Storage → Kafka → workers → CDN'],['Global media platform','Multi-region upload → storage → specialist workers → CDN + DLQ']]
-    };
-    const [name, diagram] = plans[activeScenario][tier];
-    const bottlenecks = ['Single service capacity', 'Queue backlog and downstream limits', 'Worker concurrency and third-party quotas', 'Cross-region operations and cost'];
-    byId('recommendation').innerHTML = `<span class="section-kicker">RECOMMENDED ARCHITECTURE · ${activeScenario.toUpperCase()}</span><h3>${name}</h3><pre>${diagram}</pre><p>Every slider changes the pressure score and recommendation. These are engineering estimates, not benchmarks.</p><dl><div><dt>COMPLEXITY</dt><dd>${['Low','Moderate','High','Very high'][tier]}</dd></div><div><dt>SCALABILITY</dt><dd>${['Moderate','Queued','Horizontal','Multi-region'][tier]}</dd></div><div><dt>COST PROFILE</dt><dd>${'$'.repeat(budget + 1)}</dd></div><div><dt>PRIMARY BOTTLENECK</dt><dd>${bottlenecks[tier]}</dd></div></dl>`;
+    const plan = detail.simulator_plans[tier];
+    if (!plan) return;
+    const bottleneckEntry = shared.simulator_bottlenecks.find(b => b.tier === tier);
+    const bottleneck = bottleneckEntry ? bottleneckEntry.text : '';
+    byId('recommendation').innerHTML = `<span class="section-kicker">RECOMMENDED ARCHITECTURE · ${activeScenario.toUpperCase()}</span><h3>${plan.name}</h3><pre>${plan.diagram}</pre><p>Every slider changes the pressure score and recommendation. These are engineering estimates, not benchmarks.</p><dl><div><dt>COMPLEXITY</dt><dd>${['Low', 'Moderate', 'High', 'Very high'][tier]}</dd></div><div><dt>SCALABILITY</dt><dd>${['Moderate', 'Queued', 'Horizontal', 'Multi-region'][tier]}</dd></div><div><dt>COST PROFILE</dt><dd>${'$'.repeat(budget + 1)}</dd></div><div><dt>PRIMARY BOTTLENECK</dt><dd>${bottleneck}</dd></div></dl>`;
   }
-  const openScenario = (card) => { activeScenario = card.dataset.scenario; activeStage = 'requirements'; document.querySelectorAll('.scenario-card').forEach(x => x.classList.toggle('selected', x === card)); byId('journey').hidden = false; renderStage(); const panel = byId('component-inspector'); if (panel) panel.remove(); recommendation(); byId('journey').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
-  document.querySelectorAll('.scenario-card').forEach(card => { card.onclick = () => openScenario(card); card.onkeydown = (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openScenario(card); } }; });
-  document.querySelectorAll('.stage-tab').forEach(btn => btn.onclick = () => { document.querySelectorAll('.stage-tab').forEach(x=>x.classList.remove('active')); btn.classList.add('active'); activeStage=btn.dataset.stage; renderStage(); });
-  byId('traffic-control').querySelector('input').oninput = (e) => { const v=+e.target.value; byId('traffic-value').textContent=['10K events/day','100K events/day','1M events/day','10M events/day'][v]; updateMetrics(v); };
-  byId('decision-grid').innerHTML=decisions.map(d=>`<article class="decision-card"><span class="section-kicker">DECISION</span><h3>${d[0]}</h3><p><b>Problem:</b> ${d[1]}</p><p><b>Decision:</b> ${d[2]}</p><button>EXPLORE TRADE-OFFS +</button><div class="decision-detail"><p>${d[3]}</p><p><b>${d[4]}</b></p></div></article>`).join(''); document.querySelectorAll('.decision-card button').forEach(b=>b.onclick=()=>b.parentElement.classList.toggle('expanded'));
-  byId('failure-controls').innerHTML=Object.keys(failures).map(f=>`<button class="failure-btn">🔴 ${f}</button>`).join(''); document.querySelectorAll('.failure-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.failure-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');const [impact,response,recovery]=failures[b.textContent.replace('🔴 ','')];byId('failure-result').innerHTML=`<span class="impact-label">IMPACT — ${impact}</span><h3>${b.textContent.replace('🔴 ','')}</h3><p><b>System response:</b> ${response}</p><p><b>Recovery strategy:</b> ${recovery}</p>`});
-  byId('cache-toggle').onclick=()=>{const on=byId('cache-toggle').getAttribute('aria-pressed')==='true';byId('cache-toggle').setAttribute('aria-pressed',!on);byId('cache-toggle').innerHTML=`CACHE <b>${on?'OFF':'ON'}</b>`;byId('cache-impact').textContent=on?'Cache bypasses PostgreSQL: latency and database pressure rise, but durable delivery remains available.':'Redis absorbs repeat preference and template reads, keeping Postgres focused on durable delivery state.';byId('cache-requests').textContent=on?'100%':'36%';byId('cache-latency').textContent=on?'142 ms':'48 ms';byId('cache-headroom').textContent=on?'1.0×':'2.8×'};
-  byId('adr-list').innerHTML=adr.map(x=>`<article class="adr-item"><button class="adr-summary"><span class="adr-id">${x[0]}</span><strong>${x[1]}</strong><span>+</span></button><div class="adr-body">${x[2]}</div></article>`).join('');document.querySelectorAll('.adr-summary').forEach(x=>x.onclick=()=>x.parentElement.classList.toggle('open'));document.querySelectorAll('.sim-controls input').forEach(x=>x.oninput=recommendation);document.querySelector('[data-action="scenario"]').onclick=()=>byId('scenarios').scrollIntoView({behavior:'smooth'});byId('journey').hidden=true;recommendation();
+
+  async function fetchScenarioDetail(key) {
+    if (scenarioDetails[key]) return scenarioDetails[key];
+    const res = await fetch(`/api/scenarios/${key}/`);
+    const data = await res.json();
+    scenarioDetails[key] = data;
+    return data;
+  }
+
+  const openScenario = async (card) => {
+    const key = card.dataset.scenario;
+    document.querySelectorAll('.scenario-card').forEach(x => x.classList.toggle('selected', x === card));
+    byId('journey').hidden = false;
+    byId('stage-copy').innerHTML = '<div class="loading">LOADING SCENARIO</div>';
+    byId('journey').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    try {
+      await fetchScenarioDetail(key);
+    } catch (e) {
+      console.error('fetchScenarioDetail error:', e);
+      byId('stage-copy').innerHTML = '<p>Could not load this scenario. Please try again.</p>';
+      return;
+    }
+    activeScenario = key;
+    activeStage = 'requirements';
+    document.querySelectorAll('.stage-tab').forEach(t => t.classList.toggle('active', t.dataset.stage === 'requirements'));
+    renderStage();
+    const panel = byId('component-inspector');
+    if (panel) panel.remove();
+    recommendation();
+  };
+
+  function bindScenarioCards() {
+    document.querySelectorAll('.scenario-card').forEach(card => {
+      card.onclick = () => openScenario(card);
+      card.onkeydown = (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openScenario(card); } };
+    });
+  }
+
+  async function loadScenarios() {
+    const stack = byId('scenario-stack');
+    if (!stack) return null;
+    try {
+      const res = await fetch('/api/scenarios/');
+      const data = await res.json();
+      if (!Array.isArray(data) || !data.length) return null;
+      stack.innerHTML = data.map((s, i) => `
+        <article class="scenario-card${i === 0 ? ' selected' : ''}" data-scenario="${s.key}" tabindex="0">
+          <div class="scenario-num">${s.number}</div>
+          <div class="scenario-main"><span class="difficulty">${s.difficulty}</span>
+            <h3>${s.title}</h3>
+            <p>${s.description}</p>
+          </div>
+          <div class="requirement-chips">${(s.requirement_chips || []).map(c => `<span>${c}</span>`).join('')}</div>
+          <button class="scenario-open" aria-label="Open ${s.title} scenario">→</button>
+        </article>`).join('');
+      bindScenarioCards();
+      return data;
+    } catch (e) {
+      console.error('loadScenarios error:', e);
+      return null;
+    }
+  }
+
+  function renderSharedSections() {
+    byId('decision-grid').innerHTML = shared.decisions.map(d => `<article class="decision-card"><span class="section-kicker">DECISION</span><h3>${d.title}</h3><p><b>Problem:</b> ${d.problem}</p><p><b>Decision:</b> ${d.decision}</p><button>EXPLORE TRADE-OFFS +</button><div class="decision-detail"><p>${d.detail}</p><p><b>${d.alternatives}</b></p></div></article>`).join('');
+    document.querySelectorAll('.decision-card button').forEach(b => b.onclick = () => b.parentElement.classList.toggle('expanded'));
+
+    byId('failure-controls').innerHTML = shared.failure_modes.map(f => `<button class="failure-btn" data-failure="${f.name}">🔴 ${f.name}</button>`).join('');
+    document.querySelectorAll('.failure-btn').forEach(b => b.onclick = () => {
+      document.querySelectorAll('.failure-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      const f = shared.failure_modes.find(x => x.name === b.dataset.failure);
+      if (!f) return;
+      byId('failure-result').innerHTML = `<span class="impact-label">IMPACT — ${f.impact}</span><h3>${f.name}</h3><p><b>System response:</b> ${f.response}</p><p><b>Recovery strategy:</b> ${f.recovery}</p>`;
+    });
+
+    byId('adr-list').innerHTML = shared.adrs.map(x => `<article class="adr-item"><button class="adr-summary"><span class="adr-id">${x.identifier}</span><strong>${x.title}</strong><span>+</span></button><div class="adr-body">${x.detail}</div></article>`).join('');
+    document.querySelectorAll('.adr-summary').forEach(x => x.onclick = () => x.parentElement.classList.toggle('open'));
+  }
+
+  async function loadShared() {
+    try {
+      const res = await fetch('/api/lab-shared/');
+      shared = await res.json();
+      renderSharedSections();
+      return shared;
+    } catch (e) {
+      console.error('loadShared error:', e);
+      return null;
+    }
+  }
+
+  document.querySelectorAll('.stage-tab').forEach(btn => btn.onclick = () => {
+    if (!activeScenario) return;
+    document.querySelectorAll('.stage-tab').forEach(x => x.classList.remove('active'));
+    btn.classList.add('active');
+    activeStage = btn.dataset.stage;
+    renderStage();
+  });
+
+  byId('traffic-control').querySelector('input').oninput = (e) => {
+    const v = +e.target.value;
+    const label = shared && shared.traffic_metrics[v] ? shared.traffic_metrics[v].traffic_label : '';
+    byId('traffic-value').textContent = label;
+    updateMetrics(v);
+  };
+
+  byId('cache-toggle').onclick = () => { const on = byId('cache-toggle').getAttribute('aria-pressed') === 'true'; byId('cache-toggle').setAttribute('aria-pressed', !on); byId('cache-toggle').innerHTML = `CACHE <b>${on ? 'OFF' : 'ON'}</b>`; byId('cache-impact').textContent = on ? 'Cache bypasses PostgreSQL: latency and database pressure rise, but durable delivery remains available.' : 'Redis absorbs repeat preference and template reads, keeping Postgres focused on durable delivery state.'; byId('cache-requests').textContent = on ? '100%' : '36%'; byId('cache-latency').textContent = on ? '142 ms' : '48 ms'; byId('cache-headroom').textContent = on ? '1.0×' : '2.8×'; };
+
+  document.querySelectorAll('.sim-controls input').forEach(x => x.oninput = recommendation);
+  document.querySelector('[data-action="scenario"]').onclick = () => byId('scenarios').scrollIntoView({ behavior: 'smooth' });
+  byId('journey').hidden = true;
+
+  // Boot: load the scenario cards + shared (component/decision/failure/ADR/metric) data in
+  // parallel, then eagerly warm the default (first) scenario so the always-visible simulator
+  // panel has something to recommend before the visitor opens a card themselves.
+  (async function boot() {
+    const [scenarioList] = await Promise.all([loadScenarios(), loadShared()]);
+    if (!scenarioList || !scenarioList.length) return;
+    try {
+      await fetchScenarioDetail(scenarioList[0].key);
+      activeScenario = scenarioList[0].key;
+      recommendation();
+    } catch (e) {
+      console.error('default scenario detail error:', e);
+    }
+  })();
   };
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init, { once: true });

@@ -564,6 +564,44 @@ nav {
   color: var(--bg);
 }
 
+/* Breadcrumbs — sits in normal document flow directly below the fixed nav,
+   so it reserves its own space instead of overlaying scrolled content. */
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.6rem 4rem;
+  background: transparent;
+  font-family: "Share Tech Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+.breadcrumbs a {
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.breadcrumbs a:hover {
+  color: var(--accent);
+}
+.breadcrumb-mid {
+  color: var(--text-dim);
+}
+.breadcrumb-sep {
+  color: var(--border);
+}
+.breadcrumb-current {
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .breadcrumbs {
+    padding: 0.5rem 1.5rem;
+    font-size: 0.62rem;
+  }
+}
+
 /* Sections */
 section {
   position: relative;

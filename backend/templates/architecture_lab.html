@@ -67,35 +67,8 @@
         <h2>Choose a system to reason about.</h2>
       </div><span class="scenario-count">03 / MORE TO COME</span>
     </div>
-    <div class="scenario-stack">
-      <article class="scenario-card selected" data-scenario="notification" tabindex="0">
-        <div class="scenario-num">01</div>
-        <div class="scenario-main"><span class="difficulty">SENIOR / SYSTEM DESIGN</span>
-          <h3>Notification System</h3>
-          <p>Process 10 million events per day with low latency and reliable multi-channel delivery.</p>
-        </div>
-        <div class="requirement-chips"><span>10M events/day</span><span>Retries + dedupe</span><span>Email · SMS ·
-            Push</span></div><button class="scenario-open" aria-label="Open Notification System scenario">→</button>
-      </article>
-      <article class="scenario-card" data-scenario="payments" tabindex="0">
-        <div class="scenario-num">02</div>
-        <div class="scenario-main"><span class="difficulty">SENIOR / RELIABILITY</span>
-          <h3>Payments Ledger</h3>
-          <p>Build a payment workflow that keeps financial state correct while integrating unreliable external gateways.
-          </p>
-        </div>
-        <div class="requirement-chips"><span>Strong consistency</span><span>Audit trail</span><span>Idempotency</span>
-        </div><button class="scenario-open" aria-label="Open Payments Ledger scenario">→</button>
-      </article>
-      <article class="scenario-card" data-scenario="media" tabindex="0">
-        <div class="scenario-num">03</div>
-        <div class="scenario-main"><span class="difficulty">SENIOR / PLATFORM</span>
-          <h3>Media Processing Pipeline</h3>
-          <p>Accept large uploads, process them asynchronously, and deliver globally without blocking users.</p>
-        </div>
-        <div class="requirement-chips"><span>Large uploads</span><span>Async jobs</span><span>Global delivery</span>
-        </div><button class="scenario-open" aria-label="Open Media Processing Pipeline scenario">→</button>
-      </article>
+    <div class="scenario-stack" id="scenario-stack">
+      <div class="loading">LOADING SCENARIOS</div>
     </div>
   </section>
   <section class="lab-section journey" id="journey">
