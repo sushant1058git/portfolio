@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}LeetCode Stats | Sushant Sinha{% endblock %}
+{% block nav_leetcode %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .lc-page {
+        min-height: 100vh;
+        padding: 8rem 4rem 4rem;
+        position: relative;
+        z-index: 2;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .lc-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 3rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .lc-hero-left .page-tag {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .75rem;
+        letter-spacing: .35em;
+        color: var(--accent);
+        display: block;
+        margin-bottom: .5rem;
+    }
+
+    .lc-hero-left h1 {
+        font-family: 'Orbitron', monospace;
+        font-size: 2rem;
+        font-weight: 900;
+        color: var(--text-heading);
+        margin: 0;
+    }
+
+    .lc-refresh-note {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .72rem;
+        color: var(--text-dim);
+        letter-spacing: .1em;
+    }
+
+    .lc-refresh-btn {
+        background: none;
+        border: none;
+        color: var(--accent);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .72rem;
+        cursor: pointer;
+        letter-spacing: .1em;
+        text-decoration: underline;
+    }
+
+    /* Profile card */
+    .lc-profile-card {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        padding: 1.8rem;
+        display: flex;
+        gap: 1.6rem;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .lc-avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        border: 2px solid var(--accent);
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .lc-profile-main {
+        flex: 1;
+        min-width: 220px;
+    }
+
+    .lc-profile-name {
+        font-family: 'Orbitron', monospace;
+        font-size: 1.3rem;
+        color: var(--text-heading);
+        margin: 0 0 .3rem;
+    }
+
+    .lc-profile-username {
+        font-family: 'Share Tech Mono', monospace;
+        color: var(--accent);
+        font-size: .85rem;
+        text-decoration: none;
+    }
+
+    .lc-profile-username:hover {
+        text-decoration: underline;
+    }
+
+    .lc-rank {
+        margin-top: .8rem;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .78rem;
+        color: var(--text-dim);
+    }
+
+    .lc-rank b {
+        color: var(--accent2);
+    }
+
+    /* Solve stats */
+    .lc-section-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 1rem;
+        color: var(--text-heading);
+        letter-spacing: .08em;
+        margin: 0 0 1rem;
+    }
+
+    .lc-total {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        padding: 1.6rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .lc-total-val {
+        font-family: 'Orbitron', monospace;
+        font-size: 2.6rem;
+        font-weight: 900;
+        color: var(--accent);
+        display: block;
+    }
+
+    .lc-total-label {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .75rem;
+        letter-spacing: .2em;
+        color: var(--text-dim);
+    }
+
+    .lc-diff-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+    }
+
+    .lc-diff-card {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        padding: 1.2rem 1.4rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .lc-diff-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3px;
+        height: 100%;
+    }
+
+    .lc-diff-card.easy::before {
+        background: #28c840;
+    }
+
+    .lc-diff-card.medium::before {
+        background: #f5c518;
+    }
+
+    .lc-diff-card.hard::before {
+        background: var(--accent3);
+    }
+
+    .lc-diff-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: .7rem;
+    }
+
+    .lc-diff-name {
+        font-family: 'Orbitron', monospace;
+        font-size: .8rem;
+        letter-spacing: .08em;
+    }
+
+    .lc-diff-card.easy .lc-diff-name {
+        color: #28c840;
+    }
+
+    .lc-diff-card.medium .lc-diff-name {
+        color: #f5c518;
+    }
+
+    .lc-diff-card.hard .lc-diff-name {
+        color: var(--accent3);
+    }
+
+    .lc-diff-count {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 1rem;
+        color: var(--text);
+    }
+
+    .lc-mini-bar {
+        height: 4px;
+        background: var(--bg3);
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    .lc-mini-bar-fill {
+        height: 100%;
+        transition: width 1s ease;
+        width: 0%;
+    }
+
+    .lc-diff-card.easy .lc-mini-bar-fill {
+        background: #28c840;
+    }
+
+    .lc-diff-card.medium .lc-mini-bar-fill {
+        background: #f5c518;
+    }
+
+    .lc-diff-card.hard .lc-mini-bar-fill {
+        background: var(--accent3);
+    }
+
+    .lc-error {
+        text-align: center;
+        padding: 3rem;
+        color: var(--accent3);
+        font-family: 'Share Tech Mono', monospace;
+        border: 1px solid var(--accent3);
+        background: var(--bg2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lc-page">
+
+    <div class="lc-hero">
+        <div class="lc-hero-left">
+            <span class="page-tag">// LEETCODE</span>
+            <h1>LEETCODE STATS</h1>
+        </div>
+        <div class="lc-refresh-note">
+            Cached ~1h ·
+            <button class="lc-refresh-btn" onclick="fetchLeetCodeProfile()">REFRESH NOW</button>
+        </div>
+    </div>
+
+    <div id="lc-content">
+        <div class="loading">FETCHING LEETCODE STATS</div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    async function fetchLeetCodeProfile() {
+        const target = document.getElementById('lc-content');
+        target.innerHTML = '<div class="loading">FETCHING LEETCODE STATS</div>';
+        try {
+            const res = await fetch('/api/leetcode-profile/');
+            const data = await res.json();
+            if (!res.ok || data.error) throw new Error(data.error || 'Request failed');
+            renderLeetCodeProfile(data);
+        } catch (e) {
+            target.innerHTML = `<div class="lc-error">COULD NOT LOAD LEETCODE STATS<br><small>${e.message}</small></div>`;
+        }
+    }
+
+    function renderLeetCodeProfile(d) {
+        const target = document.getElementById('lc-content');
+        const solved = d.solved || { all: 0, easy: 0, medium: 0, hard: 0 };
+
+        const profileCard = `
+      <div class="lc-profile-card fade-up visible">
+        ${d.avatar_url ? `<img class="lc-avatar" src="${d.avatar_url}" alt="${d.username}">` : ''}
+        <div class="lc-profile-main">
+          <h2 class="lc-profile-name">${d.username}</h2>
+          <a class="lc-profile-username" href="${d.profile_url}" target="_blank">${d.profile_url}</a>
+          ${d.ranking ? `<div class="lc-rank">GLOBAL RANK <b>#${d.ranking.toLocaleString()}</b></div>` : ''}
+        </div>
+      </div>`;
+
+        const total = `
+      <div class="lc-total fade-up visible">
+        <span class="lc-total-val">${solved.all}</span>
+        <span class="lc-total-label">PROBLEMS SOLVED</span>
+      </div>`;
+
+        const maxCount = Math.max(solved.easy, solved.medium, solved.hard, 1);
+        const diffCard = (key, label, count) => `
+      <div class="lc-diff-card ${key}">
+        <div class="lc-diff-header">
+          <span class="lc-diff-name">${label}</span>
+          <span class="lc-diff-count">${count}</span>
+        </div>
+        <div class="lc-mini-bar"><div class="lc-mini-bar-fill" data-pct="${Math.round((count / maxCount) * 100)}"></div></div>
+      </div>`;
+
+        const diffGrid = `
+      <h3 class="lc-section-title">BY DIFFICULTY</h3>
+      <div class="lc-diff-grid">
+        ${diffCard('easy', 'EASY', solved.easy)}
+        ${diffCard('medium', 'MEDIUM', solved.medium)}
+        ${diffCard('hard', 'HARD', solved.hard)}
+      </div>`;
+
+        target.innerHTML = profileCard + total + diffGrid;
+
+        setTimeout(() => {
+            document.querySelectorAll('.lc-mini-bar-fill').forEach(el => {
+                el.style.width = el.dataset.pct + '%';
+            });
+        }, 100);
+    }
+
+    fetchLeetCodeProfile();
+</script>
+{% endblock %}

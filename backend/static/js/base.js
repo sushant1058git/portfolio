@@ -367,6 +367,8 @@ document.addEventListener("keydown", function (e) {
     "/playground/",
     "/status/",
     "/labs/architecture/",
+    "/labs/github/",
+    "/labs/leetcode/",
   ]);
 
   const LABELS = {
@@ -378,6 +380,8 @@ document.addEventListener("keydown", function (e) {
     contact: "Contact",
     create: "New Post",
     "access-denied": "Access Denied",
+    github: "GitHub Profile",
+    leetcode: "LeetCode",
   };
 
   function titleize(segment) {

@@ -92,25 +92,51 @@ function renderProfile(p) {
 
 // ── Skills ────────────────────────────────────────────────
 function renderSkills(skills) {
-  const grid = document.getElementById("skills-grid");
-  if (!grid) return;
+  const coreEl = document.getElementById("skills-core");
+  const secondaryWrap = document.getElementById("skills-secondary-wrap");
+  const secondaryEl = document.getElementById("skills-secondary");
+  if (!coreEl) return;
+
   if (!skills.length) {
-    grid.innerHTML = '<p style="color:var(--text-dim)">No skills found.</p>';
+    coreEl.innerHTML = '<p style="color:var(--text-dim)">No skills found.</p>';
     return;
   }
-  grid.innerHTML = skills
+
+  const core = skills.filter((cat) => cat.is_core !== false);
+  const secondary = skills.filter((cat) => cat.is_core === false);
+
+  coreEl.innerHTML = core
     .map(
-      (cat) => `
-    <div class="skill-card fade-up visible">
-      <div class="skill-card-icon">${cat.icon}</div>
-      <div class="skill-card-title">${cat.name.toUpperCase()}</div>
-      <div class="skill-tags">
-        ${cat.skills.map((s) => `<span class="skill-tag">${s.name}</span>`).join("")}
+      (cat, i) => `
+    <div class="skill-core-card fade-up visible">
+      <div class="skill-core-index">${String(i + 1).padStart(2, "0")}</div>
+      <div class="skill-core-icon">${cat.icon}</div>
+      <div class="skill-core-body">
+        <div class="skill-core-title">${cat.name.toUpperCase()}</div>
+        <div class="skill-tags">
+          ${cat.skills.map((s) => `<span class="skill-tag">${s.name}</span>`).join("")}
+        </div>
       </div>
     </div>
   `,
     )
     .join("");
+
+  if (secondary.length && secondaryWrap && secondaryEl) {
+    secondaryWrap.style.display = "block";
+    secondaryEl.innerHTML = secondary
+      .map(
+        (cat) => `
+      <div class="skill-secondary-row">
+        <span class="skill-secondary-label">${cat.icon} ${cat.name.toUpperCase()}</span>
+        <div class="skill-tags compact">
+          ${cat.skills.map((s) => `<span class="skill-tag small">${s.name}</span>`).join("")}
+        </div>
+      </div>
+    `,
+      )
+      .join("");
+  }
 }
 
 // ── Experience ────────────────────────────────────────────

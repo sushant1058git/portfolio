@@ -18,7 +18,7 @@ class SkillCategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SkillCategory
-        fields = ['id', 'name', 'icon', 'skills']
+        fields = ['id', 'name', 'icon', 'is_core', 'skills']
 
 
 class ExperiencePointSerializer(serializers.ModelSerializer):

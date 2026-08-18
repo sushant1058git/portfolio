@@ -641,6 +641,15 @@ section {
   text-align: center;
   margin-bottom: 4rem;
 }
+.section-subtitle {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+  max-width: 560px;
+  margin: 1.2rem auto 0;
+}
 
 /* Buttons */
 .btn {
@@ -1481,13 +1490,6 @@ html.light-theme .contact-inner {
   margin: 0 auto;
   text-align: center;
   color: #000000;
-}
-
-html.light-theme .contact-desc {
-  font-size: 1.1rem;
-  color: #333333;
-  line-height: 1.8;
-  margin-bottom: 2rem;
 }
 
 html.light-theme .contact-link {

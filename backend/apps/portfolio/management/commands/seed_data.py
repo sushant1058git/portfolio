@@ -43,20 +43,32 @@ class Command(BaseCommand):
 
     def _seed_skills(self):
         from apps.portfolio.models import SkillCategory, Skill
+
+        # One-time cleanup: these categories were restructured into the backend-focused
+        # set below — their skills are preserved under the new category names.
+        SkillCategory.objects.filter(name__in=['Backend Development', 'Data & Search', 'Version Control']).delete()
+        # Kafka moved from Cloud & DevOps to its own Distributed Systems category.
+        Skill.objects.filter(category__name='Cloud & DevOps', name='Kafka').delete()
+
+        # (name, icon, order, is_core, skills) — is_core=True surfaces in the featured
+        # "Core Expertise" row; the rest render as a compact secondary row.
         skill_data = [
-            ('Backend Development', '⚙️', 0, ['Python', 'Django', 'FastAPI', 'DRF', 'REST APIs', 'JWT Auth', 'SQL', 'NoSQL']),
-            ('Frontend', '🎨', 1, ['React', 'JavaScript', 'HTML5', 'CSS3', 'Chart.js', 'Go.js']),
-            ('Cloud & DevOps', '☁️', 2, ['AWS', 'EC2', 'S3', 'Docker', 'Kubernetes', 'GitLab CI/CD', 'Kafka']),
-            ('Data & Search', '🗄️', 3, ['MongoDB', 'Elasticsearch', 'PostgreSQL', 'Pandas', 'Celery', 'R/Shiny', 'sci-spaCy']),
-            ('Version Control', '🔀', 4, ['Git', 'GitLab', 'Bitbucket', 'JIRA']),
-            ('AI / ML Integration', '🧠', 5, ['NLP', 'sci-spaCy', 'Predictive Analytics', 'Risk Scoring', '21 CFR Part 11']),
+            ('Backend & APIs', '🐍', 0, True, ['Python', 'Django', 'FastAPI', 'DRF', 'REST APIs', 'JWT Auth', 'Swagger/OpenAPI', 'Pandas']),
+            ('Databases', '🗄️', 1, True, ['PostgreSQL', 'MongoDB', 'Elasticsearch', 'SQL', 'NoSQL']),
+            ('Distributed Systems', '🔗', 2, True, ['Kafka', 'Celery', 'Event-Driven Architecture', 'Background Jobs']),
+            ('Cloud & DevOps', '☁️', 3, True, ['AWS', 'EC2', 'S3', 'Docker', 'Kubernetes', 'GitLab CI/CD']),
+            ('System Design', '🏗️', 4, True, ['HLD/LLD', 'Scalability', 'API Design', 'Data Modeling']),
+            ('AI / ML Integration', '🧠', 5, False, ['NLP', 'sci-spaCy', 'Predictive Analytics', 'Risk Scoring', '21 CFR Part 11', 'R/Shiny']),
+            ('Frontend', '🎨', 6, False, ['React', 'JavaScript', 'HTML5', 'CSS3', 'Chart.js', 'Go.js']),
+            ('Tools & Practices', '🔀', 7, False, ['Git', 'GitLab', 'Bitbucket', 'JIRA']),
         ]
-        for cat_name, icon, order, skills in skill_data:
-            if not SkillCategory.objects.filter(name=cat_name).exists():
-                cat = SkillCategory.objects.create(name=cat_name, icon=icon, order=order)
-                for i, skill in enumerate(skills):
-                    Skill.objects.create(category=cat, name=skill, order=i)
-        self.stdout.write('  ✓ Skills created')
+        for cat_name, icon, order, is_core, skills in skill_data:
+            cat, _ = SkillCategory.objects.update_or_create(
+                name=cat_name, defaults={'icon': icon, 'order': order, 'is_core': is_core},
+            )
+            for i, skill in enumerate(skills):
+                Skill.objects.get_or_create(category=cat, name=skill, defaults={'order': i})
+        self.stdout.write('  ✓ Skills created/updated')
 
     def _seed_experience(self):
         from apps.portfolio.models import Experience, ExperiencePoint

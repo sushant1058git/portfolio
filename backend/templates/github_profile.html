@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}GitHub Profile | Sushant Sinha{% endblock %}
+{% block nav_github %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .gh-page {
+        min-height: 100vh;
+        padding: 8rem 4rem 4rem;
+        position: relative;
+        z-index: 2;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .gh-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 3rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .gh-hero-left .page-tag {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .75rem;
+        letter-spacing: .35em;
+        color: var(--accent);
+        display: block;
+        margin-bottom: .5rem;
+    }
+
+    .gh-hero-left h1 {
+        font-family: 'Orbitron', monospace;
+        font-size: 2rem;
+        font-weight: 900;
+        color: var(--text-heading);
+        margin: 0;
+    }
+
+    .gh-refresh-note {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .72rem;
+        color: var(--text-dim);
+        letter-spacing: .1em;
+    }
+
+    .gh-refresh-btn {
+        background: none;
+        border: none;
+        color: var(--accent);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .72rem;
+        cursor: pointer;
+        letter-spacing: .1em;
+        text-decoration: underline;
+    }
+
+    /* Profile card */
+    .gh-profile-card {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        padding: 1.8rem;
+        display: flex;
+        gap: 1.6rem;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .gh-avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        border: 2px solid var(--accent);
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .gh-profile-main {
+        flex: 1;
+        min-width: 220px;
+    }
+
+    .gh-profile-name {
+        font-family: 'Orbitron', monospace;
+        font-size: 1.3rem;
+        color: var(--text-heading);
+        margin: 0 0 .2rem;
+    }
+
+    .gh-profile-username {
+        font-family: 'Share Tech Mono', monospace;
+        color: var(--accent);
+        font-size: .85rem;
+        text-decoration: none;
+    }
+
+    .gh-profile-username:hover {
+        text-decoration: underline;
+    }
+
+    .gh-profile-bio {
+        margin: .8rem 0;
+        color: var(--text-dim);
+        line-height: 1.55;
+        font-size: .9rem;
+    }
+
+    .gh-profile-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.2rem;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .78rem;
+        color: var(--text-dim);
+        margin-top: .8rem;
+    }
+
+    .gh-stats {
+        display: flex;
+        gap: 1.6rem;
+        flex-wrap: wrap;
+    }
+
+    .gh-stat {
+        text-align: center;
+    }
+
+    .gh-stat-val {
+        font-family: 'Orbitron', monospace;
+        font-size: 1.4rem;
+        color: var(--accent);
+        display: block;
+    }
+
+    .gh-stat-label {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .68rem;
+        letter-spacing: .12em;
+        color: var(--text-dim);
+    }
+
+    /* Repo grid */
+    .gh-section-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 1rem;
+        color: var(--text-heading);
+        letter-spacing: .08em;
+        margin: 0 0 1rem;
+    }
+
+    .gh-repo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+
+    .gh-repo-card {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        padding: 1.2rem 1.4rem;
+        transition: border-color .3s;
+        text-decoration: none;
+        display: block;
+    }
+
+    .gh-repo-card:hover {
+        border-color: var(--accent);
+    }
+
+    .gh-repo-name {
+        font-family: 'Orbitron', monospace;
+        font-size: .85rem;
+        color: var(--accent);
+        margin: 0 0 .5rem;
+        word-break: break-word;
+    }
+
+    .gh-repo-desc {
+        font-size: .8rem;
+        color: var(--text-dim);
+        line-height: 1.5;
+        margin-bottom: .8rem;
+        min-height: 2.4em;
+    }
+
+    .gh-repo-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: .72rem;
+        color: var(--text-dim);
+    }
+
+    .gh-repo-lang {
+        color: var(--accent2);
+    }
+
+    .gh-error {
+        text-align: center;
+        padding: 3rem;
+        color: var(--accent3);
+        font-family: 'Share Tech Mono', monospace;
+        border: 1px solid var(--accent3);
+        background: var(--bg2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="gh-page">
+
+    <div class="gh-hero">
+        <div class="gh-hero-left">
+            <span class="page-tag">// GITHUB</span>
+            <h1>GITHUB PROFILE</h1>
+        </div>
+        <div class="gh-refresh-note">
+            Cached ~1h ·
+            <button class="gh-refresh-btn" onclick="fetchGitHubProfile()">REFRESH NOW</button>
+        </div>
+    </div>
+
+    <div id="gh-content">
+        <div class="loading">FETCHING GITHUB PROFILE</div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    async function fetchGitHubProfile() {
+        const target = document.getElementById('gh-content');
+        target.innerHTML = '<div class="loading">FETCHING GITHUB PROFILE</div>';
+        try {
+            const res = await fetch('/api/github-profile/');
+            const data = await res.json();
+            if (!res.ok || data.error) throw new Error(data.error || 'Request failed');
+            renderGitHubProfile(data);
+        } catch (e) {
+            target.innerHTML = `<div class="gh-error">COULD NOT LOAD GITHUB PROFILE<br><small>${e.message}</small></div>`;
+        }
+    }
+
+    function renderGitHubProfile(d) {
+        const target = document.getElementById('gh-content');
+
+        const profileCard = `
+      <div class="gh-profile-card fade-up visible">
+        ${d.avatar_url ? `<img class="gh-avatar" src="${d.avatar_url}" alt="${d.username}">` : ''}
+        <div class="gh-profile-main">
+          <h2 class="gh-profile-name">${d.name || d.username}</h2>
+          <a class="gh-profile-username" href="${d.html_url}" target="_blank">@${d.username}</a>
+          ${d.bio ? `<p class="gh-profile-bio">${d.bio}</p>` : ''}
+          <div class="gh-profile-meta">
+            ${d.company ? `<span>🏢 ${d.company}</span>` : ''}
+            ${d.location ? `<span>📍 ${d.location}</span>` : ''}
+            ${d.blog ? `<span>🔗 ${d.blog}</span>` : ''}
+          </div>
+        </div>
+        <div class="gh-stats">
+          <div class="gh-stat"><span class="gh-stat-val">${d.public_repos ?? '—'}</span><span class="gh-stat-label">REPOS</span></div>
+          <div class="gh-stat"><span class="gh-stat-val">${d.followers ?? '—'}</span><span class="gh-stat-label">FOLLOWERS</span></div>
+          <div class="gh-stat"><span class="gh-stat-val">${d.following ?? '—'}</span><span class="gh-stat-label">FOLLOWING</span></div>
+        </div>
+      </div>`;
+
+        const repos = d.top_repos || [];
+        const repoGrid = repos.length
+            ? `<h3 class="gh-section-title">TOP REPOSITORIES</h3>
+         <div class="gh-repo-grid">
+           ${repos.map(r => `
+             <a class="gh-repo-card fade-up visible" href="${r.url}" target="_blank">
+               <h4 class="gh-repo-name">${r.name}</h4>
+               <div class="gh-repo-desc">${r.description || 'No description provided.'}</div>
+               <div class="gh-repo-footer">
+                 <span>${r.language ? `<span class="gh-repo-lang">● ${r.language}</span>` : ''}</span>
+                 <span>★ ${r.stars} &nbsp; ⑂ ${r.forks}</span>
+               </div>
+             </a>`).join('')}
+         </div>`
+            : '';
+
+        target.innerHTML = profileCard + repoGrid;
+    }
+
+    fetchGitHubProfile();
+</script>
+{% endblock %}

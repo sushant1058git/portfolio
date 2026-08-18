@@ -19,7 +19,8 @@ class SkillInline(admin.TabularInline):
 
 @admin.register(SkillCategory)
 class SkillCategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'icon', 'order']
+    list_display = ['name', 'icon', 'is_core', 'order']
+    list_filter = ['is_core']
     inlines = [SkillInline]
 
 

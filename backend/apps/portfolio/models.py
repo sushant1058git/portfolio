@@ -38,6 +38,7 @@ class SkillCategory(models.Model):
     name = models.CharField(max_length=100)
     icon = models.CharField(max_length=10, default='⚙️', help_text='Emoji icon')
     order = models.PositiveIntegerField(default=0)
+    is_core = models.BooleanField(default=True, help_text='Shown in the featured "Core Expertise" row vs a compact secondary row')
 
     class Meta:
         verbose_name_plural = 'Skill Categories'
